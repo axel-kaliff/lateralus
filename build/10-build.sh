@@ -47,7 +47,10 @@ echo "::group:: Install Packages"
 dnf5 install -y \
     fwupd \
     power-profiles-daemon \
-    bluez
+    bluez \
+    firewalld \
+    pipewire-codec-aptx \
+    zram-generator
 
 # Tailscale - official repo
 dnf5 config-manager addrepo --from-repofile=https://pkgs.tailscale.com/stable/fedora/tailscale.repo
@@ -64,10 +67,50 @@ systemctl enable tailscaled
 systemctl enable bluetooth
 systemctl enable power-profiles-daemon
 systemctl enable fwupd-refresh.timer
+systemctl enable firewalld
 
 # Pre-enable Tailscale systray for all users (systemd user service)
 mkdir -p /etc/skel/.config/systemd/user/default.target.wants
 ln -sf /usr/lib/systemd/user/tailscale-systray.service /etc/skel/.config/systemd/user/default.target.wants/tailscale-systray.service
+
+echo "::endgroup::"
+
+echo "::group:: ZRAM Configuration"
+
+# Configure ZRAM with LZ4 compression (4GB)
+mkdir -p /etc/systemd
+cat > /etc/systemd/zram-generator.conf << 'ZRAMEOF'
+[zram0]
+zram-size = min(ram, 4096)
+compression-algorithm = lz4
+ZRAMEOF
+
+echo "::endgroup::"
+
+echo "::group:: Kernel Hardening"
+
+# Sysctl hardening
+cat > /etc/sysctl.d/99-lateralus-hardening.conf << 'SYSCTLEOF'
+# Restrict dmesg access to root
+kernel.dmesg_restrict = 1
+
+# Hide kernel pointers
+kernel.kptr_restrict = 2
+
+# Restrict ptrace
+kernel.yama.ptrace_scope = 2
+
+# Disable core dumps
+fs.suid_dumpable = 0
+
+# Network hardening
+net.ipv4.conf.all.rp_filter = 1
+net.ipv4.conf.default.rp_filter = 1
+net.ipv4.conf.all.accept_redirects = 0
+net.ipv4.conf.default.accept_redirects = 0
+net.ipv6.conf.all.accept_redirects = 0
+net.ipv6.conf.default.accept_redirects = 0
+SYSCTLEOF
 
 echo "::endgroup::"
 

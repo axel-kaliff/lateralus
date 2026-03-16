@@ -47,16 +47,29 @@ brew "tree-sitter"
 
 # AI/LLM
 brew "ollama"
+brew "aider-chat"
 
 # Container tools
 brew "dive"
 brew "podman-compose"
 brew "skopeo"
+brew "lazydocker"
 
 # Network tools
 brew "nmap"
 brew "bandwhich"
 brew "trippy"
+brew "doggo"
+
+# Modern CLI replacements
+brew "sd"
+brew "procs"
+brew "xh"
+brew "jq"
+brew "jnv"
+brew "watchexec"
+brew "gum"
+brew "vhs"
 
 # Terminal productivity
 brew "glow"
@@ -64,6 +77,9 @@ brew "slides"
 brew "hyperfine"
 brew "tokei"
 brew "bottom"
+
+# Developer workflow
+brew "mise"
 
 # File sync/backup
 brew "restic"

@@ -47,27 +47,8 @@ configure-dev-groups:
 
     echo "Groups configured. Log out and back in for changes to take effect."
 
-# Example toggle command with user choice
-[group('System')]
-toggle-example-feature:
-    #!/usr/bin/bash
-    source /usr/lib/ujust/ujust.sh
-    echo "This is an example toggle command."
-    echo "Current status: [check your status here]"
-    OPTION=$(Choose "Enable" "Disable" "Cancel")
-    case "$OPTION" in
-        "Enable")
-            echo "Enabling feature..."
-            # Add your enable logic here
-            ;;
-        "Disable")
-            echo "Disabling feature..."
-            # Add your disable logic here
-            ;;
-        "Cancel")
-            echo "No changes made."
-            ;;
-    esac
+
+
 
 # Clean up container images and volumes
 [group('Maintenance')]
