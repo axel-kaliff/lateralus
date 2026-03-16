@@ -27,7 +27,15 @@ eval "$("${HOMEBREW_PREFIX}/bin/brew" shellenv)"
 
 echo "::endgroup::"
 
-echo "::group:: Install Brew Packages"
+echo "::group:: Setup Flatpak"
+
+# Ensure flatpak is installed and Flathub remote is configured
+dnf5 install -y flatpak
+flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+
+echo "::endgroup::"
+
+echo "::group:: Install Brew Packages and Flatpaks"
 
 # Install all packages from the dotfiles Brewfile
 cat > /tmp/Brewfile << 'BREWEOF'
@@ -64,6 +72,64 @@ brew "zellij"
 brew "zoxide"
 brew "atuin"
 brew "stow"
+
+# Flatpaks (installed via brew at build time)
+flatpak "app.zen_browser.zen"
+flatpak "be.alexandervanhee.gradia"
+flatpak "com.bitwarden.desktop"
+flatpak "com.discordapp.Discord"
+flatpak "com.github.PintaProject.Pinta"
+flatpak "com.github.rafostar.Clapper"
+flatpak "com.github.tchx84.Flatseal"
+flatpak "com.github.unrud.VideoDownloader"
+flatpak "com.mattjakeman.ExtensionManager"
+flatpak "com.obsproject.Studio"
+flatpak "com.ranfdev.DistroShelf"
+flatpak "com.slack.Slack"
+flatpak "com.spotify.Client"
+flatpak "de.schmidhuberj.DieBahn"
+flatpak "dev.bragefuglseth.Keypunch"
+flatpak "io.github.flattool.Ignition"
+flatpak "io.github.flattool.Warehouse"
+flatpak "io.github.nozwock.Packet"
+flatpak "io.github.slgobinath.SafeEyes"
+flatpak "io.gitlab.adhami3310.Impression"
+flatpak "io.missioncenter.MissionCenter"
+flatpak "io.podman_desktop.PodmanDesktop"
+flatpak "it.mijorus.smile"
+flatpak "md.obsidian.Obsidian"
+flatpak "net.ankiweb.Anki"
+flatpak "net.mullvad.MullvadBrowser"
+flatpak "nl.hjdskes.gcolor3"
+flatpak "org.audacityteam.Audacity"
+flatpak "org.chromium.Chromium"
+flatpak "org.ferdium.Ferdium"
+flatpak "org.gnome.Calculator"
+flatpak "org.gnome.Characters"
+flatpak "org.gnome.clocks"
+flatpak "org.gnome.Contacts"
+flatpak "org.gnome.Decibels"
+flatpak "org.gnome.FileRoller"
+flatpak "org.gnome.Firmware"
+flatpak "org.gnome.Loupe"
+flatpak "org.gnome.Maps"
+flatpak "org.gnome.NautilusPreviewer"
+flatpak "org.gnome.NetworkDisplays"
+flatpak "org.gnome.Papers"
+flatpak "org.gnome.Snapshot"
+flatpak "org.gnome.TextEditor"
+flatpak "org.gnome.Weather"
+flatpak "org.gustavoperedo.FontDownloader"
+flatpak "org.inkscape.Inkscape"
+flatpak "org.kde.dolphin"
+flatpak "org.mozilla.Thunderbird"
+flatpak "org.onlyoffice.desktopeditors"
+flatpak "org.qbittorrent.qBittorrent"
+flatpak "org.videolan.VLC"
+flatpak "org.zotero.Zotero"
+flatpak "page.tesk.Refine"
+flatpak "re.sonny.Eloquent"
+flatpak "us.zoom.Zoom"
 BREWEOF
 
 chown linuxbrew:linuxbrew /tmp/Brewfile
