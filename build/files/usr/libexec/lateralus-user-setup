@@ -1,0 +1,38 @@
+#!/usr/bin/bash
+# Populate user config from /etc/skel on first login after rebase
+# This runs as a systemd user service
+set -eou pipefail
+
+STAMP="${HOME}/.config/.lateralus-setup-done"
+
+# Skip if already run
+if [ -f "$STAMP" ]; then
+    exit 0
+fi
+
+echo "Setting up dotfiles from /etc/skel..."
+
+mkdir -p "${HOME}/.config"
+
+# Copy configs from skel without overwriting existing files
+if [ -d /etc/skel/.config ]; then
+    for item in /etc/skel/.config/*; do
+        name=$(basename "$item")
+        target="${HOME}/.config/${name}"
+        if [ ! -e "$target" ]; then
+            cp -r "$item" "$target"
+            echo "  Copied ${name}"
+        else
+            echo "  Skipped ${name} (already exists)"
+        fi
+    done
+fi
+
+# Copy .bashrc if missing
+if [ ! -f "${HOME}/.bashrc" ] && [ -f /etc/skel/.bashrc ]; then
+    cp /etc/skel/.bashrc "${HOME}/.bashrc"
+    echo "  Copied .bashrc"
+fi
+
+touch "$STAMP"
+echo "User setup complete."
