@@ -45,6 +45,34 @@ brew "luacheck"
 brew "markdownlint-cli"
 brew "tree-sitter"
 
+# AI/LLM
+brew "ollama"
+
+# Container tools
+brew "dive"
+brew "podman-compose"
+brew "skopeo"
+
+# Network tools
+brew "nmap"
+brew "bandwhich"
+brew "trippy"
+
+# Terminal productivity
+brew "glow"
+brew "slides"
+brew "hyperfine"
+brew "tokei"
+brew "bottom"
+
+# File sync/backup
+brew "restic"
+brew "rclone"
+
+# Security
+brew "age"
+brew "sops"
+
 # System tools
 brew "wl-clipboard"
 brew "distrobox"

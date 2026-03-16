@@ -87,6 +87,34 @@ brew "tree-sitter"
 brew "wl-clipboard"
 brew "distrobox"
 
+# AI/LLM
+brew "ollama"
+
+# Container tools
+brew "dive"
+brew "podman-compose"
+brew "skopeo"
+
+# Network tools
+brew "nmap"
+brew "bandwhich"
+brew "trippy"
+
+# Terminal productivity
+brew "glow"
+brew "slides"
+brew "hyperfine"
+brew "tokei"
+brew "bottom"
+
+# File sync/backup
+brew "restic"
+brew "rclone"
+
+# Security
+brew "age"
+brew "sops"
+
 # Nerd Fonts
 cask "font-fira-code-nerd-font"
 cask "font-jetbrains-mono-nerd-font"
@@ -137,6 +165,8 @@ flatpak "re.sonny.Eloquent"
 flatpak "us.zoom.Zoom"
 flatpak "com.github.finefindus.eyedropper"
 flatpak "com.usebottles.bottles"
+flatpak "com.valvesoftware.Steam"
+flatpak "org.gimp.GIMP"
 BREWEOF
 
 chown linuxbrew:linuxbrew /tmp/Brewfile

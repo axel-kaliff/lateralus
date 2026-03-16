@@ -90,3 +90,50 @@ update-and-reboot:
     else
         echo "Reboot later to apply updates."
     fi
+
+# Update everything: brew, flatpak, system
+[group('Maintenance')]
+update-all:
+    #!/usr/bin/bash
+    echo "Updating brew packages..."
+    brew update && brew upgrade
+    echo ""
+    echo "Updating flatpaks..."
+    flatpak update -y
+    echo ""
+    echo "Checking for system updates..."
+    sudo bootc upgrade
+    echo ""
+    echo "All updates complete!"
+
+# Set fish as default shell
+[group('System')]
+set-fish-shell:
+    #!/usr/bin/bash
+    FISH_PATH=$(command -v fish)
+    if [ -z "$FISH_PATH" ]; then
+        echo "Fish shell not found!"
+        exit 1
+    fi
+    if [ "$SHELL" = "$FISH_PATH" ]; then
+        echo "Fish is already your default shell."
+        exit 0
+    fi
+    echo "Setting fish ($FISH_PATH) as default shell..."
+    chsh -s "$FISH_PATH"
+    echo "Done! Log out and back in for the change to take effect."
+
+# First-time setup: gh login + fish shell
+[group('System')]
+setup:
+    #!/usr/bin/bash
+    echo "=== Lateralus First-Time Setup ==="
+    echo ""
+    echo "Step 1: GitHub authentication"
+    gh auth login
+    echo ""
+    echo "Step 2: Setting fish as default shell..."
+    FISH_PATH=$(command -v fish)
+    chsh -s "$FISH_PATH"
+    echo ""
+    echo "Setup complete! Log out and back in to start using fish."
