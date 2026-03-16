@@ -58,6 +58,17 @@ rm -f /etc/yum.repos.d/tailscale.repo
 
 echo "::endgroup::"
 
+echo "::group:: Install Lateralus Setup Scripts"
+
+# Install rebase-safe setup scripts and services
+install -Dm755 /ctx/build/files/usr/libexec/lateralus-brew-setup /usr/libexec/lateralus-brew-setup
+install -Dm755 /ctx/build/files/usr/libexec/lateralus-user-setup /usr/libexec/lateralus-user-setup
+install -Dm644 /ctx/build/files/usr/lib/systemd/system/lateralus-brew-setup.service /usr/lib/systemd/system/lateralus-brew-setup.service
+install -Dm644 /ctx/build/files/usr/lib/systemd/user/lateralus-user-setup.service /usr/lib/systemd/user/lateralus-user-setup.service
+install -Dm644 /ctx/build/files/usr/lib/systemd/user-preset/50-lateralus.preset /usr/lib/systemd/user-preset/50-lateralus.preset
+
+echo "::endgroup::"
+
 echo "::group:: System Configuration"
 
 # Enable/disable systemd services
@@ -67,10 +78,12 @@ systemctl enable bluetooth
 systemctl enable power-profiles-daemon
 systemctl enable fwupd-refresh.timer
 systemctl enable firewalld
+systemctl enable lateralus-brew-setup.service
 
-# Pre-enable Tailscale systray for all users (systemd user service)
+# Pre-enable user services for all users (systemd user services)
 mkdir -p /etc/skel/.config/systemd/user/default.target.wants
 ln -sf /usr/lib/systemd/user/tailscale-systray.service /etc/skel/.config/systemd/user/default.target.wants/tailscale-systray.service
+ln -sf /usr/lib/systemd/user/lateralus-user-setup.service /etc/skel/.config/systemd/user/default.target.wants/lateralus-user-setup.service
 
 echo "::endgroup::"
 

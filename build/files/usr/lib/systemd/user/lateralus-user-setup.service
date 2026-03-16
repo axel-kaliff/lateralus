@@ -1,0 +1,10 @@
+[Unit]
+Description=Populate user dotfiles from /etc/skel after rebase
+
+[Service]
+Type=oneshot
+ExecStart=/usr/libexec/lateralus-user-setup
+RemainAfterExit=yes
+
+[Install]
+WantedBy=default.target

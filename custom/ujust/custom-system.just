@@ -102,17 +102,28 @@ set-fish-shell:
     chsh -s "$FISH_PATH"
     echo "Done! Log out and back in for the change to take effect."
 
-# First-time setup: gh login + fish shell
+# First-time setup: dotfiles + brew + gh login + fish shell
 [group('System')]
 setup:
     #!/usr/bin/bash
     echo "=== Lateralus First-Time Setup ==="
     echo ""
-    echo "Step 1: GitHub authentication"
+    echo "Step 1: Populating dotfiles..."
+    /usr/libexec/lateralus-user-setup
+    echo ""
+    echo "Step 2: Checking Homebrew..."
+    if ! command -v brew &>/dev/null && [ ! -x /home/linuxbrew/.linuxbrew/bin/brew ]; then
+        echo "Homebrew not found. Installing (this may take a while)..."
+        sudo /usr/libexec/lateralus-brew-setup
+    else
+        echo "Homebrew is available."
+    fi
+    echo ""
+    echo "Step 3: GitHub authentication"
     gh auth login
     echo ""
-    echo "Step 2: Setting fish as default shell..."
-    FISH_PATH=$(command -v fish)
+    echo "Step 4: Setting fish as default shell..."
+    FISH_PATH=$(command -v fish || echo /home/linuxbrew/.linuxbrew/bin/fish)
     chsh -s "$FISH_PATH"
     echo ""
     echo "Setup complete! Log out and back in to start using fish."

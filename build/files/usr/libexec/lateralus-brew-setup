@@ -1,0 +1,28 @@
+#!/usr/bin/bash
+# Bootstrap Homebrew on first boot after rebase
+# This runs as a system service when /home/linuxbrew/.linuxbrew is missing
+set -eoux pipefail
+
+HOMEBREW_PREFIX="/home/linuxbrew/.linuxbrew"
+
+# Create the linuxbrew user if it doesn't exist
+if ! id linuxbrew &>/dev/null; then
+    useradd -m -d /home/linuxbrew linuxbrew
+fi
+
+mkdir -p "${HOMEBREW_PREFIX}"
+chown -R linuxbrew:linuxbrew /home/linuxbrew
+
+# Install Homebrew as linuxbrew user
+export NONINTERACTIVE=1
+su - linuxbrew -c 'export NONINTERACTIVE=1; /usr/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"'
+
+# Install packages from built-in Brewfiles
+for brewfile in /usr/share/ublue-os/homebrew/*.Brewfile; do
+    if [ -f "$brewfile" ]; then
+        chown linuxbrew:linuxbrew "$brewfile"
+        su - linuxbrew -c "${HOMEBREW_PREFIX}/bin/brew bundle --file=${brewfile} --no-lock" || true
+    fi
+done
+
+echo "Homebrew setup complete."
