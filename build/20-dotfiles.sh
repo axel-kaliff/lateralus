@@ -174,6 +174,23 @@ rm -rf /tmp/dotfiles
 
 echo "::endgroup::"
 
+echo "::group:: Configure Git"
+
+# Set up git credential helper to use gh (GitHub CLI)
+# After `gh auth login`, all git operations are automatically authenticated
+git config --system credential.helper '!/home/linuxbrew/.linuxbrew/bin/gh auth git-credential'
+
+# Pre-configure git identity and delta integration
+git config --system user.name "Axel Kaliff"
+git config --system user.email "axel.kaliff@protonmail.com"
+git config --system core.pager delta
+git config --system interactive.diffFilter "delta --color-only"
+git config --system delta.navigate true
+git config --system delta.side-by-side true
+git config --system delta.line-numbers true
+
+echo "::endgroup::"
+
 echo "::group:: Set Fish as Default Shell"
 
 # Add fish to /etc/shells
