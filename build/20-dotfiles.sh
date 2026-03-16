@@ -20,7 +20,9 @@ mkdir -p "${HOMEBREW_PREFIX}"
 chown -R linuxbrew:linuxbrew /home/linuxbrew
 
 # Install Homebrew as linuxbrew user (installer refuses root)
-su - linuxbrew -c 'NONINTERACTIVE=1 /usr/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"'
+# Export NONINTERACTIVE before su to ensure it propagates
+export NONINTERACTIVE=1
+su - linuxbrew -c 'export NONINTERACTIVE=1; /usr/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"'
 
 # Make brew accessible
 eval "$("${HOMEBREW_PREFIX}/bin/brew" shellenv)"
@@ -187,9 +189,23 @@ flatpak "com.valvesoftware.Steam"
 flatpak "org.gimp.GIMP"
 BREWEOF
 
-chown linuxbrew:linuxbrew /tmp/Brewfile
-su - linuxbrew -c "${HOMEBREW_PREFIX}/bin/brew bundle --file=/tmp/Brewfile --no-lock"
-rm -f /tmp/Brewfile
+# Split Brewfile: brew packages run as linuxbrew, flatpaks run as root
+grep -v '^flatpak ' /tmp/Brewfile > /tmp/Brewfile.brew
+grep '^flatpak ' /tmp/Brewfile > /tmp/Brewfile.flatpak || true
+
+# Install brew packages as linuxbrew user
+chown linuxbrew:linuxbrew /tmp/Brewfile.brew
+su - linuxbrew -c "${HOMEBREW_PREFIX}/bin/brew bundle --file=/tmp/Brewfile.brew --no-lock"
+
+# Install flatpaks as root (requires system-level access)
+while IFS= read -r line; do
+    # Extract app ID from: flatpak "org.example.App"
+    app_id=$(echo "$line" | sed 's/flatpak "\(.*\)"/\1/')
+    echo "Installing flatpak: ${app_id}"
+    flatpak install -y --noninteractive flathub "${app_id}" || echo "WARN: Failed to install ${app_id}, skipping"
+done < /tmp/Brewfile.flatpak
+
+rm -f /tmp/Brewfile /tmp/Brewfile.brew /tmp/Brewfile.flatpak
 
 echo "::endgroup::"
 
@@ -226,7 +242,8 @@ echo "::group:: Configure Git"
 
 # Set up git credential helper to use gh (GitHub CLI)
 # After `gh auth login`, all git operations are automatically authenticated
-git config --system credential.helper '!/home/linuxbrew/.linuxbrew/bin/gh auth git-credential'
+# Uses command -v fallback so it works even if brew path changes
+git config --system credential.helper '!command -v gh >/dev/null && gh auth git-credential || /home/linuxbrew/.linuxbrew/bin/gh auth git-credential'
 
 # Pre-configure git identity and delta integration
 git config --system user.name "Axel Kaliff"

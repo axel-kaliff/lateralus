@@ -35,9 +35,8 @@ cp /ctx/custom/brew/*.Brewfile /usr/share/ublue-os/homebrew/
 # Consolidate Just Files
 find /ctx/custom/ujust -iname '*.just' -exec printf "\n\n" \; -exec cat {} \; >> /usr/share/ublue-os/just/60-custom.just
 
-# Copy Flatpak preinstall files
-mkdir -p /etc/flatpak/preinstall.d/
-cp /ctx/custom/flatpaks/*.preinstall /etc/flatpak/preinstall.d/
+# Flatpaks are installed at build time via build/20-dotfiles.sh
+# No preinstall files needed
 
 echo "::endgroup::"
 
