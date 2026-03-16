@@ -43,11 +43,10 @@ echo "::endgroup::"
 
 echo "::group:: Install Packages"
 
-# Install packages using dnf5
-# Example: dnf5 install -y tmux
-
-# Example using COPR with isolated pattern:
-# copr_install_isolated "ublue-os/staging" package-name
+# Tailscale - official repo
+dnf5 config-manager addrepo --from-repofile=https://pkgs.tailscale.com/stable/fedora/tailscale.repo
+dnf5 install -y tailscale
+rm -f /etc/yum.repos.d/tailscale.repo
 
 echo "::endgroup::"
 
@@ -55,7 +54,11 @@ echo "::group:: System Configuration"
 
 # Enable/disable systemd services
 systemctl enable podman.socket
-# Example: systemctl mask unwanted-service
+systemctl enable tailscaled
+
+# Pre-enable Tailscale systray for all users (systemd user service)
+mkdir -p /etc/skel/.config/systemd/user/default.target.wants
+ln -sf /usr/lib/systemd/user/tailscale-systray.service /etc/skel/.config/systemd/user/default.target.wants/tailscale-systray.service
 
 echo "::endgroup::"
 
