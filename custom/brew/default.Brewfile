@@ -1,43 +1,50 @@
-# Packages from axel-kaliff/dotfiles
-# These are installed at user-level via Homebrew for tools not in Fedora repos
+# Packages installed at build time - see build/20-dotfiles.sh for the canonical list
+# This file is kept for runtime brew bundle updates
 
-# Shell & prompt
+# CLI tools (from dotfiles)
+brew "gcc"
 brew "fish"
-brew "starship"
-brew "atuin"
-brew "zoxide"
-
-# Terminal multiplexer
-brew "zellij"
-
-# CLI tools
 brew "bat"
 brew "delta"
+brew "devcontainer"
+brew "direnv"
 brew "dust"
 brew "dysk"
 brew "eza"
 brew "fd"
 brew "fzf"
-brew "ripgrep"
-brew "trash-cli"
-brew "ugrep"
-brew "yazi"
-brew "yq"
-brew "tealdeer"
-brew "topgrade"
-
-# Development
-brew "devcontainer"
-brew "direnv"
-brew "gcc"
 brew "gh"
 brew "glab"
 brew "go"
+brew "just"
 brew "lazygit"
 brew "luarocks"
 brew "neovim"
 brew "node"
+brew "ripgrep"
 brew "ruff"
 brew "shellcheck"
-brew "stow"
+brew "starship"
+brew "tealdeer"
+brew "topgrade"
+brew "trash-cli"
+brew "ugrep"
 brew "uv"
+brew "yazi"
+brew "yq"
+brew "zellij"
+brew "zoxide"
+brew "atuin"
+brew "stow"
+
+# Dev tools (nvim LSP/lint/format dependencies)
+brew "rust-analyzer"
+brew "pyright"
+brew "stylua"
+brew "luacheck"
+brew "markdownlint-cli"
+brew "tree-sitter"
+
+# System tools
+brew "wl-clipboard"
+brew "distrobox"

@@ -43,6 +43,12 @@ echo "::endgroup::"
 
 echo "::group:: Install Packages"
 
+# System packages
+dnf5 install -y \
+    fwupd \
+    power-profiles-daemon \
+    bluez
+
 # Tailscale - official repo
 dnf5 config-manager addrepo --from-repofile=https://pkgs.tailscale.com/stable/fedora/tailscale.repo
 dnf5 install -y tailscale
@@ -55,6 +61,9 @@ echo "::group:: System Configuration"
 # Enable/disable systemd services
 systemctl enable podman.socket
 systemctl enable tailscaled
+systemctl enable bluetooth
+systemctl enable power-profiles-daemon
+systemctl enable fwupd-refresh.timer
 
 # Pre-enable Tailscale systray for all users (systemd user service)
 mkdir -p /etc/skel/.config/systemd/user/default.target.wants
