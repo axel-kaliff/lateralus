@@ -115,6 +115,24 @@ brew "rclone"
 brew "age"
 brew "sops"
 
+# AI coding
+brew "aider-chat"
+
+# Modern CLI replacements
+brew "sd"
+brew "procs"
+brew "xh"
+brew "jq"
+brew "jnv"
+brew "doggo"
+brew "watchexec"
+brew "gum"
+brew "vhs"
+
+# Developer workflow
+brew "mise"
+brew "lazydocker"
+
 # Nerd Fonts
 cask "font-fira-code-nerd-font"
 cask "font-jetbrains-mono-nerd-font"
