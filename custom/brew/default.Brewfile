@@ -1,22 +1,43 @@
-# Default Brewfile for bluepilot
-# Add your favorite brew packages here
-# 
-# Examples:
+# Packages from axel-kaliff/dotfiles
+# These are installed at user-level via Homebrew for tools not in Fedora repos
 
-# Modern CLI tools
-brew "bat"        # cat with syntax highlighting
-brew "eza"        # Modern replacement for ls
-brew "fd"         # Simple, fast alternative to find
-brew "rg"         # ripgrep - faster grep
+# Shell & prompt
+brew "fish"
+brew "starship"
+brew "atuin"
+brew "zoxide"
 
-# Development tools
-brew "gh"         # GitHub CLI
-brew "git"        # Git version control
+# Terminal multiplexer
+brew "zellij"
 
-# Shell enhancements  
-brew "starship"   # Cross-shell prompt
-brew "zoxide"     # Smarter cd command
+# CLI tools
+brew "bat"
+brew "delta"
+brew "dust"
+brew "dysk"
+brew "eza"
+brew "fd"
+brew "fzf"
+brew "ripgrep"
+brew "trash-cli"
+brew "ugrep"
+brew "yazi"
+brew "yq"
+brew "tealdeer"
+brew "topgrade"
 
-# Utilities
-brew "htop"       # Interactive process viewer
-brew "tmux"       # Terminal multiplexer
+# Development
+brew "devcontainer"
+brew "direnv"
+brew "gcc"
+brew "gh"
+brew "glab"
+brew "go"
+brew "lazygit"
+brew "luarocks"
+brew "neovim"
+brew "node"
+brew "ruff"
+brew "shellcheck"
+brew "stow"
+brew "uv"
