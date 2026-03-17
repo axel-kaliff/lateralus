@@ -64,8 +64,29 @@ echo "::group:: Install Lateralus Setup Scripts"
 install -Dm755 /ctx/build/files/usr/libexec/lateralus-brew-setup /usr/libexec/lateralus-brew-setup
 install -Dm755 /ctx/build/files/usr/libexec/lateralus-user-setup /usr/libexec/lateralus-user-setup
 install -Dm644 /ctx/build/files/usr/lib/systemd/system/lateralus-brew-setup.service /usr/lib/systemd/system/lateralus-brew-setup.service
-install -Dm644 /ctx/build/files/usr/lib/systemd/user/lateralus-user-setup.service /usr/lib/systemd/user/lateralus-user-setup.service
-install -Dm644 /ctx/build/files/usr/lib/systemd/user-preset/50-lateralus.preset /usr/lib/systemd/user-preset/50-lateralus.preset
+install -Dm644 /ctx/build/files/usr/lib/systemd/system/lateralus-user-setup.service /usr/lib/systemd/system/lateralus-user-setup.service
+
+echo "::endgroup::"
+
+echo "::group:: System-wide Brew PATH"
+
+# Ensure brew is in PATH for all users regardless of their shell config
+# This is critical for existing users who rebase onto this image
+mkdir -p /etc/profile.d
+cat > /etc/profile.d/lateralus-brew.sh << 'BREWPATHEOF'
+# Add Homebrew to PATH for all users
+if [ -d /home/linuxbrew/.linuxbrew ]; then
+    eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+fi
+BREWPATHEOF
+
+mkdir -p /etc/fish/conf.d
+cat > /etc/fish/conf.d/lateralus-brew.fish << 'FISHBREWEOF'
+# Add Homebrew to PATH for all fish users
+if test -d /home/linuxbrew/.linuxbrew
+    eval (/home/linuxbrew/.linuxbrew/bin/brew shellenv)
+end
+FISHBREWEOF
 
 echo "::endgroup::"
 
@@ -79,11 +100,11 @@ systemctl enable power-profiles-daemon
 systemctl enable fwupd-refresh.timer
 systemctl enable firewalld
 systemctl enable lateralus-brew-setup.service
+systemctl enable lateralus-user-setup.service
 
-# Pre-enable user services for all users (systemd user services)
+# Pre-enable user services for new users via /etc/skel
 mkdir -p /etc/skel/.config/systemd/user/default.target.wants
 ln -sf /usr/lib/systemd/user/tailscale-systray.service /etc/skel/.config/systemd/user/default.target.wants/tailscale-systray.service
-ln -sf /usr/lib/systemd/user/lateralus-user-setup.service /etc/skel/.config/systemd/user/default.target.wants/lateralus-user-setup.service
 
 echo "::endgroup::"
 

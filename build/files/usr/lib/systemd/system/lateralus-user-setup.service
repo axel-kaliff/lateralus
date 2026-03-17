@@ -1,0 +1,13 @@
+[Unit]
+Description=Apply lateralus dotfiles and theme for all users after rebase
+After=lateralus-brew-setup.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/libexec/lateralus-user-setup
+RemainAfterExit=yes
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

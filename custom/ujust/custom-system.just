@@ -108,16 +108,17 @@ setup:
     #!/usr/bin/bash
     echo "=== Lateralus First-Time Setup ==="
     echo ""
-    echo "Step 1: Populating dotfiles..."
-    /usr/libexec/lateralus-user-setup
+    echo "Step 1: Applying dotfiles and theme..."
+    sudo /usr/libexec/lateralus-user-setup
     echo ""
     echo "Step 2: Checking Homebrew..."
     if ! command -v brew &>/dev/null && [ ! -x /home/linuxbrew/.linuxbrew/bin/brew ]; then
         echo "Homebrew not found. Installing (this may take a while)..."
         sudo /usr/libexec/lateralus-brew-setup
-    else
-        echo "Homebrew is available."
     fi
+    # Source brew into current shell
+    eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+    echo "Homebrew is available."
     echo ""
     echo "Step 3: GitHub authentication"
     gh auth login
