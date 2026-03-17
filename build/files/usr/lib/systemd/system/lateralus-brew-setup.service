@@ -1,6 +1,5 @@
 [Unit]
 Description=Bootstrap Homebrew after rebase
-ConditionPathExists=!/home/linuxbrew/.linuxbrew/bin/brew
 After=network-online.target
 Wants=network-online.target
 

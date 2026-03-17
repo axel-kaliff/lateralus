@@ -1,38 +1,82 @@
 #!/usr/bin/bash
-# Populate user config from /etc/skel on first login after rebase
-# This runs as a systemd user service
+# Apply lateralus dotfiles and COSMIC theme for all human users
+# Runs as a system service after rebase — version-aware so it re-applies when the image changes
 set -eou pipefail
 
-STAMP="${HOME}/.config/.lateralus-setup-done"
+# Get the current image version to detect rebases/upgrades
+IMAGE_VERSION=$(rpm -q --queryformat '%{VERSION}-%{RELEASE}' fedora-release 2>/dev/null || echo "unknown")
+IMAGE_ID="lateralus-${IMAGE_VERSION}"
 
-# Skip if already run
-if [ -f "$STAMP" ]; then
-    exit 0
-fi
+setup_user() {
+    local user="$1"
+    local home="$2"
+    local stamp="${home}/.config/.lateralus-setup-done"
 
-echo "Setting up dotfiles from /etc/skel..."
+    # Skip if this exact image version was already applied
+    if [ -f "$stamp" ] && [ "$(cat "$stamp")" = "$IMAGE_ID" ]; then
+        echo "  User ${user}: already set up for ${IMAGE_ID}, skipping."
+        return
+    fi
 
-mkdir -p "${HOME}/.config"
+    echo "  Setting up user ${user} for ${IMAGE_ID}..."
 
-# Copy configs from skel without overwriting existing files
-if [ -d /etc/skel/.config ]; then
-    for item in /etc/skel/.config/*; do
-        name=$(basename "$item")
-        target="${HOME}/.config/${name}"
-        if [ ! -e "$target" ]; then
-            cp -r "$item" "$target"
-            echo "  Copied ${name}"
-        else
-            echo "  Skipped ${name} (already exists)"
-        fi
-    done
-fi
+    mkdir -p "${home}/.config"
 
-# Copy .bashrc if missing
-if [ ! -f "${HOME}/.bashrc" ] && [ -f /etc/skel/.bashrc ]; then
-    cp /etc/skel/.bashrc "${HOME}/.bashrc"
-    echo "  Copied .bashrc"
-fi
+    # Copy configs from /etc/skel without overwriting existing user customizations
+    if [ -d /etc/skel/.config ]; then
+        for item in /etc/skel/.config/*; do
+            name=$(basename "$item")
+            target="${home}/.config/${name}"
+            # Skip systemd dir — we don't want to clobber user service state
+            [ "$name" = "systemd" ] && continue
+            if [ ! -e "$target" ]; then
+                cp -r "$item" "$target"
+                chown -R "${user}:${user}" "$target"
+                echo "    Copied ${name}"
+            else
+                echo "    Skipped ${name} (already exists)"
+            fi
+        done
+    fi
 
-touch "$STAMP"
-echo "User setup complete."
+    # Copy .bashrc if missing
+    if [ ! -f "${home}/.bashrc" ] && [ -f /etc/skel/.bashrc ]; then
+        cp /etc/skel/.bashrc "${home}/.bashrc"
+        chown "${user}:${user}" "${home}/.bashrc"
+        echo "    Copied .bashrc"
+    fi
+
+    # Apply COSMIC Evergreen theme for the user
+    # COSMIC reads user config from ~/.config/cosmic/ and falls back to /usr/share/cosmic/
+    # On first login COSMIC may generate default config that overrides system theme,
+    # so we proactively copy the theme builder config into the user's directory
+    local sys_theme="/usr/share/cosmic/com.system76.CosmicTheme.Dark.Builder/v1"
+    local user_theme="${home}/.config/cosmic/com.system76.CosmicTheme.Dark.Builder/v1"
+    if [ -d "$sys_theme" ]; then
+        mkdir -p "$user_theme"
+        cp -f "$sys_theme"/* "$user_theme"/
+        chown -R "${user}:${user}" "${home}/.config/cosmic"
+        echo "    Applied Evergreen theme"
+    fi
+
+    # Record which image version we set up
+    echo "$IMAGE_ID" > "$stamp"
+    chown "${user}:${user}" "$stamp"
+    echo "  User ${user} setup complete."
+}
+
+echo "Lateralus user setup (image: ${IMAGE_ID})"
+
+# Iterate all human users (UID >= 1000, with a real home directory)
+while IFS=: read -r user _ uid _ _ home shell; do
+    # Skip system users and nologin accounts
+    [ "$uid" -lt 1000 ] 2>/dev/null && continue
+    [ "$uid" -ge 65000 ] 2>/dev/null && continue
+    [ ! -d "$home" ] && continue
+    # Skip the linuxbrew user
+    [ "$user" = "linuxbrew" ] && continue
+
+    setup_user "$user" "$home"
+done < /etc/passwd
+
+echo "All users processed."
