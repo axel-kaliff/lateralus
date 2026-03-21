@@ -65,6 +65,8 @@ install -Dm755 /ctx/build/files/usr/libexec/lateralus-brew-setup /usr/libexec/la
 install -Dm755 /ctx/build/files/usr/libexec/lateralus-user-setup /usr/libexec/lateralus-user-setup
 install -Dm644 /ctx/build/files/usr/lib/systemd/system/lateralus-brew-setup.service /usr/lib/systemd/system/lateralus-brew-setup.service
 install -Dm644 /ctx/build/files/usr/lib/systemd/system/lateralus-user-setup.service /usr/lib/systemd/system/lateralus-user-setup.service
+install -Dm644 /ctx/build/files/usr/lib/tmpfiles.d/lateralus-homebrew.conf /usr/lib/tmpfiles.d/lateralus-homebrew.conf
+install -Dm644 /ctx/build/files/usr/lib/sysusers.d/lateralus-homebrew.conf /usr/lib/sysusers.d/lateralus-homebrew.conf
 
 echo "::endgroup::"
 
@@ -72,19 +74,28 @@ echo "::group:: System-wide Brew PATH"
 
 # Ensure brew is in PATH for all users regardless of their shell config
 # This is critical for existing users who rebase onto this image
+# Pattern from ublue-os/brew: only interactive shells, append (not prepend) to PATH
+# so system binaries always take priority over brew-installed ones
 mkdir -p /etc/profile.d
 cat > /etc/profile.d/lateralus-brew.sh << 'BREWPATHEOF'
-# Add Homebrew to PATH for all users
-if [ -d /home/linuxbrew/.linuxbrew ]; then
-    eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+# Add Homebrew to PATH for all users (interactive shells only)
+# Appends to PATH so system binaries take priority — prevents issues like
+# brew's p11-kit breaking Flatpak apps (ublue-os/bluefin#687)
+if [[ -d /home/linuxbrew/.linuxbrew && $- == *i* ]]; then
+    eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv | grep -Ev '\bPATH=')"
+    HOMEBREW_PREFIX="${HOMEBREW_PREFIX:-/home/linuxbrew/.linuxbrew}"
+    export PATH="${PATH}:${HOMEBREW_PREFIX}/bin:${HOMEBREW_PREFIX}/sbin"
 fi
 BREWPATHEOF
 
 mkdir -p /etc/fish/conf.d
 cat > /etc/fish/conf.d/lateralus-brew.fish << 'FISHBREWEOF'
-# Add Homebrew to PATH for all fish users
-if test -d /home/linuxbrew/.linuxbrew
-    eval (/home/linuxbrew/.linuxbrew/bin/brew shellenv)
+# Add Homebrew to PATH for all fish users (interactive shells only)
+# Appends to PATH so system binaries take priority
+if test -d /home/linuxbrew/.linuxbrew; and status is-interactive
+    eval (/home/linuxbrew/.linuxbrew/bin/brew shellenv | string match -rv '\bPATH=')
+    set -gx HOMEBREW_PREFIX /home/linuxbrew/.linuxbrew
+    fish_add_path -aP $HOMEBREW_PREFIX/bin $HOMEBREW_PREFIX/sbin
 end
 FISHBREWEOF
 

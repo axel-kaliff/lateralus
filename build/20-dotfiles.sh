@@ -209,6 +209,23 @@ rm -f /tmp/Brewfile /tmp/Brewfile.brew /tmp/Brewfile.flatpak
 
 echo "::endgroup::"
 
+echo "::group:: Package Homebrew for first-boot extraction"
+
+# On ostree/bootc, /home is persistent /var/home — content placed there during
+# build only appears on first-ever install, NOT on rebases. Ship the full brew
+# installation as a tarball in /usr/share (immutable image layer) so it can be
+# extracted reliably on any deployment via lateralus-brew-setup.service.
+mkdir -p /usr/share/lateralus
+tar --zstd -cf /usr/share/lateralus/homebrew.tar.zst -C / home/linuxbrew/.linuxbrew
+
+# Clean up the build-time brew installation from /home (-> /var/home on ostree).
+# On ostree, /var content from the image is only deployed on first install and ignored
+# on rebases, so this copy is dead weight. The tarball in /usr/share is the reliable
+# delivery mechanism. This also avoids bootc container lint warnings about /var content.
+rm -rf /home/linuxbrew/.linuxbrew
+
+echo "::endgroup::"
+
 echo "::group:: Install Dotfiles to /etc/skel"
 
 # Clone dotfiles into the image
