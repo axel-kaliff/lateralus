@@ -1,34 +1,46 @@
 #!/usr/bin/bash
 # Bootstrap Homebrew on first boot or after rebase
-# Runs as a system service — installs brew if missing, then ensures packages are installed
+# Prefers extracting from the image tarball (fast, no network) over downloading
 set -eoux pipefail
 
 HOMEBREW_PREFIX="/home/linuxbrew/.linuxbrew"
+HOMEBREW_TARBALL="/usr/share/lateralus/homebrew.tar.zst"
+
+# Create the linuxbrew user if it doesn't exist
+if ! id linuxbrew &>/dev/null; then
+    useradd -m -d /home/linuxbrew linuxbrew
+fi
+mkdir -p /home/linuxbrew
+chown linuxbrew:linuxbrew /home/linuxbrew
 
 # Check if brew is already installed and working
 if [ -x "${HOMEBREW_PREFIX}/bin/brew" ] && su - linuxbrew -c "${HOMEBREW_PREFIX}/bin/brew --version" &>/dev/null; then
     echo "Homebrew is already installed and working."
 else
-    echo "Installing Homebrew..."
-
-    # Create the linuxbrew user if it doesn't exist
-    if ! id linuxbrew &>/dev/null; then
-        useradd -m -d /home/linuxbrew linuxbrew
+    if [ -f "$HOMEBREW_TARBALL" ]; then
+        # Fast path: extract pre-built brew from the image tarball (no network needed)
+        echo "Extracting Homebrew from image tarball..."
+        tar --zstd -xf "$HOMEBREW_TARBALL" -C /
+        chown -R linuxbrew:linuxbrew /home/linuxbrew
+    else
+        # Fallback: download from the internet
+        echo "Tarball not found, installing Homebrew from network..."
+        mkdir -p "${HOMEBREW_PREFIX}"
+        chown -R linuxbrew:linuxbrew /home/linuxbrew
+        export NONINTERACTIVE=1
+        su - linuxbrew -c 'export NONINTERACTIVE=1; /usr/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"'
     fi
-
-    mkdir -p "${HOMEBREW_PREFIX}"
-    chown -R linuxbrew:linuxbrew /home/linuxbrew
-
-    # Install Homebrew as linuxbrew user
-    export NONINTERACTIVE=1
-    su - linuxbrew -c 'export NONINTERACTIVE=1; /usr/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"'
 fi
 
 # Install packages from built-in Brewfiles (idempotent — skips already-installed)
+# Brewfiles are in /usr (read-only on ostree) so we copy to /tmp before running
 for brewfile in /usr/share/ublue-os/homebrew/*.Brewfile; do
     if [ -f "$brewfile" ]; then
-        chown linuxbrew:linuxbrew "$brewfile"
-        su - linuxbrew -c "${HOMEBREW_PREFIX}/bin/brew bundle --file=${brewfile} --no-lock" || true
+        tmp_brewfile="/tmp/$(basename "$brewfile")"
+        cp "$brewfile" "$tmp_brewfile"
+        chown linuxbrew:linuxbrew "$tmp_brewfile"
+        su - linuxbrew -c "${HOMEBREW_PREFIX}/bin/brew bundle --file=${tmp_brewfile} --no-lock" || true
+        rm -f "$tmp_brewfile"
     fi
 done
 
