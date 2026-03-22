@@ -26,5 +26,9 @@ copr_install_isolated() {
     dnf5 -y copr disable "$copr_name"
     dnf5 -y install --enablerepo="$repo_id" "${packages[@]}"
 
+    # Clean up repo file from /etc/yum.repos.d/ to avoid ostree 3-way merge issues
+    rm -f /etc/yum.repos.d/_copr:copr.fedorainfracloud.org:${copr_name//\//:}.repo
+    rm -f /etc/yum.repos.d/_copr_copr.fedorainfracloud.org_${copr_name//\//_}.repo
+
     echo "Installed ${packages[*]} from $copr_name"
 }

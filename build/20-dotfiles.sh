@@ -14,9 +14,12 @@ dnf5 install -y git curl procps-ng
 
 HOMEBREW_PREFIX="/home/linuxbrew/.linuxbrew"
 
-# Create the linuxbrew user and directory structure
-useradd -m -d /home/linuxbrew linuxbrew 2>/dev/null || true
+# Create the linuxbrew user via sysusers.d (rebase-safe, avoids /etc/passwd merge issues)
+# The sysusers.d config at /usr/lib/sysusers.d/lateralus-homebrew.conf handles this
+# at boot, but we need the user during build too
+systemd-sysusers /usr/lib/sysusers.d/lateralus-homebrew.conf 2>/dev/null || useradd -r -d /home/linuxbrew linuxbrew 2>/dev/null || true
 mkdir -p "${HOMEBREW_PREFIX}"
+mkdir -p /home/linuxbrew
 chown -R linuxbrew:linuxbrew /home/linuxbrew
 
 # Install Homebrew as linuxbrew user (installer refuses root)

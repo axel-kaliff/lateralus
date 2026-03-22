@@ -127,8 +127,9 @@ echo "::endgroup::"
 echo "::group:: ZRAM Configuration"
 
 # Configure ZRAM with LZ4 compression (4GB)
-mkdir -p /etc/systemd
-cat > /etc/systemd/zram-generator.conf << 'ZRAMEOF'
+# Use /usr/lib path (immutable layer) — /etc is user-owned state on ostree
+mkdir -p /usr/lib/systemd
+cat > /usr/lib/systemd/zram-generator.conf << 'ZRAMEOF'
 [zram0]
 zram-size = min(ram, 4096)
 compression-algorithm = lz4
@@ -139,7 +140,9 @@ echo "::endgroup::"
 echo "::group:: Kernel Hardening"
 
 # Sysctl hardening
-cat > /etc/sysctl.d/99-lateralus-hardening.conf << 'SYSCTLEOF'
+# Use /usr/lib path (immutable layer) — /etc is user-owned state on ostree
+mkdir -p /usr/lib/sysctl.d
+cat > /usr/lib/sysctl.d/99-lateralus-hardening.conf << 'SYSCTLEOF'
 # Restrict dmesg access to root
 kernel.dmesg_restrict = 1
 
@@ -160,6 +163,21 @@ net.ipv4.conf.default.accept_redirects = 0
 net.ipv6.conf.all.accept_redirects = 0
 net.ipv6.conf.default.accept_redirects = 0
 SYSCTLEOF
+
+echo "::endgroup::"
+
+echo "::group:: OS Release Branding"
+
+# Customize /etc/os-release so GRUB boot entries show "Lateralus" instead of generic "Fedora Linux"
+# This is how the BLS entry title in /boot/loader/entries/ is determined
+if [ -f /usr/lib/os-release ]; then
+    sed -i 's/^PRETTY_NAME=.*/PRETTY_NAME="Lateralus (Fedora Linux)"/' /usr/lib/os-release
+    sed -i 's/^VARIANT=.*/VARIANT="Lateralus"/' /usr/lib/os-release
+    grep -q '^VARIANT=' /usr/lib/os-release || echo 'VARIANT="Lateralus"' >> /usr/lib/os-release
+    grep -q '^VARIANT_ID=' /usr/lib/os-release || echo 'VARIANT_ID=lateralus' >> /usr/lib/os-release
+    # Sync to /etc/os-release (symlink on Fedora, but some tools read /etc directly)
+    cp /usr/lib/os-release /etc/os-release 2>/dev/null || true
+fi
 
 echo "::endgroup::"
 
