@@ -1,0 +1,35 @@
+#!/usr/bin/bash
+# Install Flatpaks from the image's install list on first boot and after rebases
+# Idempotent — skips already-installed apps
+set -eou pipefail
+
+FLATPAK_LIST="/usr/share/lateralus/flatpaks.list"
+
+if [ ! -f "$FLATPAK_LIST" ]; then
+    echo "No flatpak list found at ${FLATPAK_LIST}, skipping."
+    exit 0
+fi
+
+# Ensure Flathub remote is configured
+flatpak remote-add --if-not-exists --system flathub https://flathub.org/repo/flathub.flatpakrepo
+
+# Get currently installed app IDs
+installed=$(flatpak list --app --columns=application 2>/dev/null || true)
+
+# Install each app from the list
+while IFS= read -r line; do
+    # Skip comments and blank lines
+    line="${line%%#*}"
+    line="${line// /}"
+    [ -z "$line" ] && continue
+
+    if echo "$installed" | grep -qx "$line"; then
+        echo "Already installed: ${line}"
+    else
+        echo "Installing: ${line}"
+        flatpak install -y --noninteractive --system flathub "$line" || \
+            echo "WARNING: Failed to install ${line}, skipping"
+    fi
+done < "$FLATPAK_LIST"
+
+echo "Flatpak setup complete."
