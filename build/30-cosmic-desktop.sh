@@ -55,16 +55,8 @@ echo "::group:: Configure Display Manager"
 # Enable cosmic-greeter (COSMIC's display manager)
 systemctl enable cosmic-greeter
 
-# Set COSMIC as default session
-mkdir -p /etc/X11/sessions
-cat > /etc/X11/sessions/cosmic.desktop << 'COSMICDESKTOP'
-[Desktop Entry]
-Name=COSMIC
-Comment=COSMIC Desktop Environment
-Exec=cosmic-session
-Type=Application
-DesktopNames=COSMIC
-COSMICDESKTOP
+# COSMIC is Wayland-native — the cosmic-session package registers its own
+# session file. No X11 session file needed.
 
 echo "Display manager configured"
 echo "::endgroup::"
