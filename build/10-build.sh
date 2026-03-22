@@ -80,8 +80,9 @@ echo "::group:: System-wide Brew PATH"
 # This is critical for existing users who rebase onto this image
 # Pattern from ublue-os/brew: only interactive shells, append (not prepend) to PATH
 # so system binaries always take priority over brew-installed ones
-mkdir -p /etc/profile.d
-cat > /etc/profile.d/lateralus-brew.sh << 'BREWPATHEOF'
+# Use /usr/lib/ paths (immutable layer) — /etc is user-owned state on ostree
+mkdir -p /usr/lib/profile.d
+cat > /usr/lib/profile.d/lateralus-brew.sh << 'BREWPATHEOF'
 # Add Homebrew to PATH for all users (interactive shells only)
 # Appends to PATH so system binaries take priority — prevents issues like
 # brew's p11-kit breaking Flatpak apps (ublue-os/bluefin#687)
@@ -92,8 +93,8 @@ if [[ -d /home/linuxbrew/.linuxbrew && $- == *i* ]]; then
 fi
 BREWPATHEOF
 
-mkdir -p /etc/fish/conf.d
-cat > /etc/fish/conf.d/lateralus-brew.fish << 'FISHBREWEOF'
+mkdir -p /usr/lib/fish/conf.d
+cat > /usr/lib/fish/conf.d/lateralus-brew.fish << 'FISHBREWEOF'
 # Add Homebrew to PATH for all fish users (interactive shells only)
 # Appends to PATH so system binaries take priority
 if test -d /home/linuxbrew/.linuxbrew; and status is-interactive
@@ -168,15 +169,16 @@ echo "::endgroup::"
 
 echo "::group:: OS Release Branding"
 
-# Customize /etc/os-release so GRUB boot entries show "Lateralus" instead of generic "Fedora Linux"
-# This is how the BLS entry title in /boot/loader/entries/ is determined
+# Customize /usr/lib/os-release so GRUB boot entries show "Lateralus"
+# BLS entry titles in /boot/loader/entries/ are derived from PRETTY_NAME
+# IMPORTANT: Do NOT copy to /etc/os-release — on Fedora it's a symlink to
+# ../usr/lib/os-release. Breaking that symlink causes ostree 3-way merge
+# failures during rebase, which can prevent the deployment from booting.
 if [ -f /usr/lib/os-release ]; then
     sed -i 's/^PRETTY_NAME=.*/PRETTY_NAME="Lateralus (Fedora Linux)"/' /usr/lib/os-release
     sed -i 's/^VARIANT=.*/VARIANT="Lateralus"/' /usr/lib/os-release
     grep -q '^VARIANT=' /usr/lib/os-release || echo 'VARIANT="Lateralus"' >> /usr/lib/os-release
     grep -q '^VARIANT_ID=' /usr/lib/os-release || echo 'VARIANT_ID=lateralus' >> /usr/lib/os-release
-    # Sync to /etc/os-release (symlink on Fedora, but some tools read /etc directly)
-    cp /usr/lib/os-release /etc/os-release 2>/dev/null || true
 fi
 
 echo "::endgroup::"
