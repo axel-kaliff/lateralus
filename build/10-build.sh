@@ -51,7 +51,8 @@ dnf5 install -y \
     bluez \
     firewalld \
     pipewire-codec-aptx \
-    zram-generator
+    zram-generator \
+    gtk4-layer-shell
 
 # Tailscale - official repo
 dnf5 config-manager addrepo --from-repofile=https://pkgs.tailscale.com/stable/fedora/tailscale.repo
