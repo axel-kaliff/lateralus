@@ -29,17 +29,9 @@ eval "$("${HOMEBREW_PREFIX}/bin/brew" shellenv)"
 
 echo "::endgroup::"
 
-echo "::group:: Setup Flatpak"
+echo "::group:: Install Brew Packages"
 
-# Ensure flatpak is installed and Flathub remote is configured
-dnf5 install -y flatpak
-flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
-
-echo "::endgroup::"
-
-echo "::group:: Install Brew Packages and Flatpaks"
-
-# Install all packages from the dotfiles Brewfile
+# Install all brew packages
 cat > /tmp/Brewfile << 'BREWEOF'
 # CLI tools (from dotfiles)
 brew "gcc"
@@ -140,72 +132,13 @@ cask "font-fira-code-nerd-font"
 cask "font-jetbrains-mono-nerd-font"
 cask "font-meslo-lg-nerd-font"
 cask "font-hack-nerd-font"
-
-# Flatpaks
-flatpak "app.zen_browser.zen"
-flatpak "be.alexandervanhee.gradia"
-flatpak "com.bitwarden.desktop"
-flatpak "com.discordapp.Discord"
-flatpak "com.github.PintaProject.Pinta"
-flatpak "com.github.rafostar.Clapper"
-flatpak "com.github.tchx84.Flatseal"
-flatpak "com.github.unrud.VideoDownloader"
-flatpak "com.obsproject.Studio"
-flatpak "com.ranfdev.DistroShelf"
-flatpak "com.slack.Slack"
-flatpak "com.spotify.Client"
-flatpak "de.schmidhuberj.DieBahn"
-flatpak "dev.bragefuglseth.Keypunch"
-flatpak "io.github.flattool.Ignition"
-flatpak "io.github.flattool.Warehouse"
-flatpak "io.github.nozwock.Packet"
-flatpak "io.github.slgobinath.SafeEyes"
-flatpak "io.gitlab.adhami3310.Impression"
-flatpak "io.missioncenter.MissionCenter"
-flatpak "io.podman_desktop.PodmanDesktop"
-flatpak "it.mijorus.smile"
-flatpak "md.obsidian.Obsidian"
-flatpak "net.ankiweb.Anki"
-flatpak "net.mullvad.MullvadBrowser"
-flatpak "org.audacityteam.Audacity"
-flatpak "org.chromium.Chromium"
-flatpak "org.ferdium.Ferdium"
-flatpak "org.gnome.FileRoller"
-flatpak "org.gnome.Firmware"
-flatpak "org.gnome.Loupe"
-flatpak "org.gnome.Papers"
-flatpak "org.inkscape.Inkscape"
-flatpak "org.mozilla.Thunderbird"
-flatpak "org.onlyoffice.desktopeditors"
-flatpak "org.qbittorrent.qBittorrent"
-flatpak "org.videolan.VLC"
-flatpak "org.zotero.Zotero"
-flatpak "page.tesk.Refine"
-flatpak "re.sonny.Eloquent"
-flatpak "us.zoom.Zoom"
-flatpak "com.github.finefindus.eyedropper"
-flatpak "com.usebottles.bottles"
-flatpak "com.valvesoftware.Steam"
-flatpak "org.gimp.GIMP"
 BREWEOF
 
-# Split Brewfile: brew packages run as linuxbrew, flatpaks run as root
-grep -v '^flatpak ' /tmp/Brewfile > /tmp/Brewfile.brew
-grep '^flatpak ' /tmp/Brewfile > /tmp/Brewfile.flatpak || true
-
 # Install brew packages as linuxbrew user
-chown linuxbrew:linuxbrew /tmp/Brewfile.brew
-su - linuxbrew -c "${HOMEBREW_PREFIX}/bin/brew bundle --file=/tmp/Brewfile.brew --no-lock"
+chown linuxbrew:linuxbrew /tmp/Brewfile
+su - linuxbrew -c "${HOMEBREW_PREFIX}/bin/brew bundle --file=/tmp/Brewfile --no-lock"
 
-# Install flatpaks as root (requires system-level access)
-while IFS= read -r line; do
-    # Extract app ID from: flatpak "org.example.App"
-    app_id=$(echo "$line" | sed 's/flatpak "\(.*\)"/\1/')
-    echo "Installing flatpak: ${app_id}"
-    flatpak install -y --noninteractive flathub "${app_id}" || echo "WARN: Failed to install ${app_id}, skipping"
-done < /tmp/Brewfile.flatpak
-
-rm -f /tmp/Brewfile /tmp/Brewfile.brew /tmp/Brewfile.flatpak
+rm -f /tmp/Brewfile
 
 echo "::endgroup::"
 
@@ -226,32 +159,11 @@ rm -rf /home/linuxbrew/.linuxbrew
 
 echo "::endgroup::"
 
-echo "::group:: Install Dotfiles to /etc/skel"
+echo "::group:: Bundle Dotfiles for post-install stow"
 
-# Clone dotfiles into the image
-git clone --depth 1 https://github.com/axel-kaliff/dotfiles.git /tmp/dotfiles
-
-# Install dotfiles to /etc/skel/.config/ so all new users get them
-mkdir -p /etc/skel/.config
-
-# Copy all stow-managed config dirs
-cd /tmp/dotfiles
-for dir in fish ghostty nvim zellij starship.toml lazygit yazi ripgrep atuin tealdeer; do
-    if [ -e "$dir" ]; then
-        cp -r "$dir" /etc/skel/.config/
-    fi
-done
-
-# Copy bash config to skel home
-cp /tmp/dotfiles/bash/.bashrc /etc/skel/.bashrc
-
-# Copy the Brewfile and justfile for user-level updates
-mkdir -p /etc/skel/.config/dotfiles
-cp /tmp/dotfiles/Brewfile /etc/skel/.config/dotfiles/
-cp /tmp/dotfiles/justfile /etc/skel/.config/dotfiles/
-
-# Clean up
-rm -rf /tmp/dotfiles
+# Clone dotfiles into the image for the user-setup service to deploy via stow
+git clone --depth 1 https://github.com/axel-kaliff/dotfiles.git /usr/share/lateralus/dotfiles
+rm -rf /usr/share/lateralus/dotfiles/.git
 
 echo "::endgroup::"
 

@@ -1,2 +1,2 @@
-# Flatpaks are now installed at build time via Homebrew Brewfile
-# See build/20-dotfiles.sh for the full list
+# Flatpaks are now installed via lateralus-flatpak-setup.service
+# See custom/flatpaks/install.list for the full list

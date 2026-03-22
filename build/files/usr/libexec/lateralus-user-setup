@@ -1,16 +1,27 @@
 #!/usr/bin/bash
-# Apply lateralus dotfiles and COSMIC theme for all human users
+# Deploy lateralus dotfiles (via stow) and COSMIC theme for all human users
 # Runs as a system service after rebase — version-aware so it re-applies when the image changes
 set -eou pipefail
 
+DOTFILES_SRC="/usr/share/lateralus/dotfiles"
+HOMEBREW_PREFIX="/home/linuxbrew/.linuxbrew"
+
 # Get the current image version to detect rebases/upgrades
-IMAGE_VERSION=$(rpm -q --queryformat '%{VERSION}-%{RELEASE}' fedora-release 2>/dev/null || echo "unknown")
+# Source os-release which is always present; OSTREE_VERSION includes the build date
+# so it changes on every image update (e.g. "43.20260301.0")
+if [ -f /etc/os-release ]; then
+    . /etc/os-release
+    IMAGE_VERSION="${OSTREE_VERSION:-${VERSION_ID:-unknown}}"
+else
+    IMAGE_VERSION="unknown"
+fi
 IMAGE_ID="lateralus-${IMAGE_VERSION}"
 
 setup_user() {
     local user="$1"
     local home="$2"
     local stamp="${home}/.config/.lateralus-setup-done"
+    local dotfiles_dest="${home}/dotfiles"
 
     # Skip if this exact image version was already applied
     if [ -f "$stamp" ] && [ "$(cat "$stamp")" = "$IMAGE_ID" ]; then
@@ -20,42 +31,83 @@ setup_user() {
 
     echo "  Setting up user ${user} for ${IMAGE_ID}..."
 
+    # Copy dotfiles repo to user's home (overwrite existing)
+    if [ -d "$DOTFILES_SRC" ]; then
+        # Remove old dotfiles dir (but preserve .git if user has their own clone)
+        if [ -d "${dotfiles_dest}/.git" ]; then
+            echo "    User has own dotfiles git clone, updating files only..."
+            rsync -a --exclude='.git' "${DOTFILES_SRC}/" "${dotfiles_dest}/"
+        else
+            rm -rf "${dotfiles_dest}"
+            cp -a "${DOTFILES_SRC}" "${dotfiles_dest}"
+        fi
+        chown -R "${user}:${user}" "${dotfiles_dest}"
+    else
+        echo "    WARNING: ${DOTFILES_SRC} not found, skipping dotfiles deploy."
+        return
+    fi
+
     mkdir -p "${home}/.config"
 
-    # Merge configs from /etc/skel into existing user dirs without overwriting
-    # Uses cp -rn (no-clobber) to add missing files while preserving user customizations
-    if [ -d /etc/skel/.config ]; then
-        for item in /etc/skel/.config/*; do
-            name=$(basename "$item")
-            target="${home}/.config/${name}"
-            # Skip systemd dir — we don't want to clobber user service state
-            [ "$name" = "systemd" ] && continue
-            if [ ! -e "$target" ]; then
-                cp -r "$item" "$target"
-                chown -R "${user}:${user}" "$target"
-                echo "    Copied ${name}"
-            elif [ -d "$item" ] && [ -d "$target" ]; then
-                # Merge missing files into existing directories (no-clobber)
-                cp -rn "$item"/. "$target"/
-                chown -R "${user}:${user}" "$target"
-                echo "    Merged missing files into ${name}"
-            else
-                echo "    Skipped ${name} (user file exists)"
-            fi
-        done
+    # Fix PERL5LIB for stow — brew's stow hardcodes a perl version that drifts on upgrade
+    local perl5lib
+    perl5lib=$(find "${HOMEBREW_PREFIX}/Cellar/stow" -name 'Stow.pm' -print -quit 2>/dev/null | sed 's|/Stow.pm||' || true)
+
+    local stow_cmd="${HOMEBREW_PREFIX}/bin/stow"
+    if [ ! -x "$stow_cmd" ]; then
+        echo "    WARNING: stow not found at ${stow_cmd}, skipping dotfiles stow."
+        return
     fi
 
-    # Copy .bashrc if missing
-    if [ ! -f "${home}/.bashrc" ] && [ -f /etc/skel/.bashrc ]; then
-        cp /etc/skel/.bashrc "${home}/.bashrc"
-        chown "${user}:${user}" "${home}/.bashrc"
-        echo "    Copied .bashrc"
-    fi
+    # Remove existing files/symlinks that would conflict with stow.
+    # Stow refuses to overwrite files it doesn't own, so we clean first.
+    # Walk the dotfiles source and remove matching targets so stow can place its symlinks.
+    remove_stow_conflicts() {
+        local stow_dir="$1"   # directory containing the stow package
+        local package="$2"    # package name
+        local target="$3"     # stow target directory
+        local pkg_dir="${stow_dir}/${package}"
+
+        if [ -d "$pkg_dir" ]; then
+            find "$pkg_dir" -type f -o -type l | while read -r src_file; do
+                local rel="${src_file#${pkg_dir}/}"
+                local dest="${target}/${rel}"
+                if [ -e "$dest" ] || [ -L "$dest" ]; then
+                    rm -f "$dest"
+                fi
+            done
+        fi
+    }
+
+    # Helper: run stow as the user, forcing bash shell (fish doesn't support VAR=x cmd syntax)
+    run_stow() {
+        local stow_dir="$1"
+        local target="$2"
+        local package="$3"
+        su -s /bin/bash - "$user" -c \
+            "PERL5LIB='${perl5lib}' ${stow_cmd} -d '${stow_dir}' -t '${target}' --restow '${package}'" 2>&1
+    }
+
+    # Main dotfiles → ~/.config/
+    # The .stow-local-ignore in the dotfiles repo excludes bash, claude, Brewfile, etc.
+    remove_stow_conflicts "${home}" "dotfiles" "${home}/.config"
+    run_stow "${home}" "${home}/.config" "dotfiles" || \
+        echo "    WARNING: main dotfiles stow had errors"
+    echo "    Stowed dotfiles → ~/.config/"
+
+    # bash package → ~/
+    remove_stow_conflicts "${dotfiles_dest}" "bash" "${home}"
+    run_stow "${dotfiles_dest}" "${home}" "bash" || \
+        echo "    WARNING: bash stow had errors"
+    echo "    Stowed bash → ~/"
+
+    # claude package → ~/
+    remove_stow_conflicts "${dotfiles_dest}" "claude" "${home}"
+    run_stow "${dotfiles_dest}" "${home}" "claude" || \
+        echo "    WARNING: claude stow had errors"
+    echo "    Stowed claude → ~/"
 
     # Apply COSMIC Evergreen theme for the user
-    # COSMIC reads user config from ~/.config/cosmic/ and falls back to /usr/share/cosmic/
-    # On first login COSMIC may generate default config that overrides system theme,
-    # so we proactively copy the theme builder config into the user's directory
     local sys_theme="/usr/share/cosmic/com.system76.CosmicTheme.Dark.Builder/v1"
     local user_theme="${home}/.config/cosmic/com.system76.CosmicTheme.Dark.Builder/v1"
     if [ -d "$sys_theme" ]; then
@@ -66,6 +118,7 @@ setup_user() {
     fi
 
     # Record which image version we set up
+    mkdir -p "$(dirname "$stamp")"
     echo "$IMAGE_ID" > "$stamp"
     chown "${user}:${user}" "$stamp"
     echo "  User ${user} setup complete."

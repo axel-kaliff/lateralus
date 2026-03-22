@@ -35,8 +35,10 @@ cp /ctx/custom/brew/*.Brewfile /usr/share/ublue-os/homebrew/
 # Consolidate Just Files
 find /ctx/custom/ujust -iname '*.just' -exec printf "\n\n" \; -exec cat {} \; >> /usr/share/ublue-os/just/60-custom.just
 
-# Flatpaks are installed at build time via build/20-dotfiles.sh
-# No preinstall files needed
+# Copy flatpak install list to /usr/share (immutable image layer)
+# Read by lateralus-flatpak-setup.service on first boot and after rebases
+mkdir -p /usr/share/lateralus
+cp /ctx/custom/flatpaks/install.list /usr/share/lateralus/flatpaks.list
 
 echo "::endgroup::"
 
@@ -63,8 +65,10 @@ echo "::group:: Install Lateralus Setup Scripts"
 # Install rebase-safe setup scripts and services
 install -Dm755 /ctx/build/files/usr/libexec/lateralus-brew-setup /usr/libexec/lateralus-brew-setup
 install -Dm755 /ctx/build/files/usr/libexec/lateralus-user-setup /usr/libexec/lateralus-user-setup
+install -Dm755 /ctx/build/files/usr/libexec/lateralus-flatpak-setup /usr/libexec/lateralus-flatpak-setup
 install -Dm644 /ctx/build/files/usr/lib/systemd/system/lateralus-brew-setup.service /usr/lib/systemd/system/lateralus-brew-setup.service
 install -Dm644 /ctx/build/files/usr/lib/systemd/system/lateralus-user-setup.service /usr/lib/systemd/system/lateralus-user-setup.service
+install -Dm644 /ctx/build/files/usr/lib/systemd/system/lateralus-flatpak-setup.service /usr/lib/systemd/system/lateralus-flatpak-setup.service
 install -Dm644 /ctx/build/files/usr/lib/tmpfiles.d/lateralus-homebrew.conf /usr/lib/tmpfiles.d/lateralus-homebrew.conf
 install -Dm644 /ctx/build/files/usr/lib/sysusers.d/lateralus-homebrew.conf /usr/lib/sysusers.d/lateralus-homebrew.conf
 
@@ -112,6 +116,7 @@ systemctl enable fwupd-refresh.timer
 systemctl enable firewalld
 systemctl enable lateralus-brew-setup.service
 systemctl enable lateralus-user-setup.service
+systemctl enable lateralus-flatpak-setup.service
 
 # Pre-enable user services for new users via /etc/skel
 mkdir -p /etc/skel/.config/systemd/user/default.target.wants
