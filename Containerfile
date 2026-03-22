@@ -45,7 +45,7 @@ COPY --from=ghcr.io/projectbluefin/common:latest@sha256:b8fe93b16674a547b4cf3849
 COPY --from=ghcr.io/ublue-os/brew:latest@sha256:ca91068f51ce663d495ccfc829352d6621ec95f6c7db447ade55023b222f9762 /system_files /oci/brew
 
 # Base Image - no desktop (COSMIC is installed by 30-cosmic-desktop.sh)
-FROM ghcr.io/ublue-os/base-main:latest
+FROM ghcr.io/ublue-os/base-main:latest@sha256:3593de3e8cb69331cb69f21303d51fcae7d3bc8dbf5b88649ccb5e41d8b9a548
 
 ## Alternative base images (uncomment to use):
 # FROM ghcr.io/ublue-os/silverblue-main:latest   # Fedora + GNOME
