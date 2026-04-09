@@ -1,10 +1,29 @@
 #!/usr/bin/bash
-# Bootstrap Homebrew on first boot or after rebase
-# Prefers extracting from the image tarball (fast, no network) over downloading
+# Install Homebrew and packages on first boot or after rebase
+# Version-aware: skips if the current image was already set up
 set -eoux pipefail
 
 HOMEBREW_PREFIX="/home/linuxbrew/.linuxbrew"
-HOMEBREW_TARBALL="/usr/share/lateralus/homebrew.tar.zst"
+STAMP="/var/lib/lateralus/brew-setup-done"
+
+# Pin installer commit to avoid supply-chain risk from fetching HEAD
+BREW_INSTALL_COMMIT="6d5e2670d07961e7985d2079a2f0a484420f3c38"
+
+# Get current image version for stamp comparison
+if [ -f /etc/os-release ]; then
+    # shellcheck source=/dev/null
+    . /etc/os-release
+    IMAGE_VERSION="${OSTREE_VERSION:-${VERSION_ID:-unknown}}"
+else
+    IMAGE_VERSION="unknown"
+fi
+IMAGE_ID="lateralus-${IMAGE_VERSION}"
+
+# Skip if this exact image version was already set up
+if [ -f "$STAMP" ] && [ "$(cat "$STAMP")" = "$IMAGE_ID" ]; then
+    echo "Homebrew already set up for ${IMAGE_ID}, skipping."
+    exit 0
+fi
 
 # Create the linuxbrew user if it doesn't exist
 if ! id linuxbrew &>/dev/null; then
@@ -13,35 +32,36 @@ fi
 mkdir -p /home/linuxbrew
 chown linuxbrew:linuxbrew /home/linuxbrew
 
-# Check if brew is already installed and working
+# Install Homebrew if not already present
 if [ -x "${HOMEBREW_PREFIX}/bin/brew" ] && su - linuxbrew -c "${HOMEBREW_PREFIX}/bin/brew --version" &>/dev/null; then
-    echo "Homebrew is already installed and working."
+    echo "Homebrew is already installed, updating..."
+    su - linuxbrew -c "${HOMEBREW_PREFIX}/bin/brew update" || true
 else
-    if [ -f "$HOMEBREW_TARBALL" ]; then
-        # Fast path: extract pre-built brew from the image tarball (no network needed)
-        echo "Extracting Homebrew from image tarball..."
-        tar --zstd -xf "$HOMEBREW_TARBALL" -C /
-        chown -R linuxbrew:linuxbrew /home/linuxbrew
-    else
-        # Fallback: download from the internet
-        echo "Tarball not found, installing Homebrew from network..."
-        mkdir -p "${HOMEBREW_PREFIX}"
-        chown -R linuxbrew:linuxbrew /home/linuxbrew
-        export NONINTERACTIVE=1
-        su - linuxbrew -c 'export NONINTERACTIVE=1; /usr/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"'
-    fi
+    echo "Installing Homebrew from network..."
+    mkdir -p "${HOMEBREW_PREFIX}"
+    chown -R linuxbrew:linuxbrew /home/linuxbrew
+    export NONINTERACTIVE=1
+    su - linuxbrew -c "export NONINTERACTIVE=1; /usr/bin/bash -c \"\$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/${BREW_INSTALL_COMMIT}/install.sh)\""
 fi
 
-# Install packages from built-in Brewfiles (idempotent — skips already-installed)
-# Brewfiles are in /usr (read-only on ostree) so we copy to /tmp before running
+# Install packages from Brewfiles (idempotent — skips already-installed)
 for brewfile in /usr/share/ublue-os/homebrew/*.Brewfile; do
     if [ -f "$brewfile" ]; then
         tmp_brewfile="/tmp/$(basename "$brewfile")"
         cp "$brewfile" "$tmp_brewfile"
         chown linuxbrew:linuxbrew "$tmp_brewfile"
-        su - linuxbrew -c "${HOMEBREW_PREFIX}/bin/brew bundle --file=${tmp_brewfile}" || true
+        echo "Running brew bundle for $(basename "$brewfile")..."
+        su - linuxbrew -c "${HOMEBREW_PREFIX}/bin/brew bundle --file=${tmp_brewfile}" || {
+            echo "Retrying after fixing ugrep link conflict..."
+            su - linuxbrew -c "${HOMEBREW_PREFIX}/bin/brew link --overwrite ugrep" || true
+            su - linuxbrew -c "${HOMEBREW_PREFIX}/bin/brew bundle --file=${tmp_brewfile}" || true
+        }
         rm -f "$tmp_brewfile"
     fi
 done
+
+# Record which image version was set up
+mkdir -p "$(dirname "$STAMP")"
+echo "$IMAGE_ID" > "$STAMP"
 
 echo "Homebrew setup complete."

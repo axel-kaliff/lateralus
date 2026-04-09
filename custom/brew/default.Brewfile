@@ -1,5 +1,5 @@
-# Packages installed at build time - see build/20-dotfiles.sh for the canonical list
-# This file is kept for runtime brew bundle updates
+# Canonical Brewfile — installed at first boot by lateralus-brew-setup.service
+# Edit this file to add/remove packages; changes apply on next image rebase
 
 # CLI tools (from dotfiles)
 brew "fish"

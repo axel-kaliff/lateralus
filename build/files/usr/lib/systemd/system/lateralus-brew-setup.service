@@ -1,5 +1,5 @@
 [Unit]
-Description=Bootstrap Homebrew after rebase
+Description=Install Homebrew and packages after rebase
 After=network-online.target systemd-tmpfiles-setup.service
 Wants=network-online.target
 
@@ -7,6 +7,8 @@ Wants=network-online.target
 Type=oneshot
 ExecStart=/usr/libexec/lateralus-brew-setup
 RemainAfterExit=yes
+# Network install of ~50 brew packages can take 10-30 min on first boot
+TimeoutStartSec=1800
 StandardOutput=journal
 StandardError=journal
 
