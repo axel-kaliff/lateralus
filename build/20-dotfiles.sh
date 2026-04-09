@@ -83,7 +83,7 @@ brew "markdownlint-cli"
 brew "tree-sitter"
 
 # System tools
-brew "wl-clipboard"
+brew "clipboard"
 brew "distrobox"
 
 # AI/LLM

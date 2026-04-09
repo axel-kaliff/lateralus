@@ -90,5 +90,5 @@ brew "age"
 brew "sops"
 
 # System tools
-brew "wl-clipboard"
+brew "clipboard"
 brew "distrobox"
