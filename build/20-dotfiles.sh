@@ -141,7 +141,7 @@ BREWEOF
 
 # Install brew packages as linuxbrew user
 chown linuxbrew:linuxbrew /tmp/Brewfile
-su - linuxbrew -c "${HOMEBREW_PREFIX}/bin/brew bundle --file=/tmp/Brewfile --no-lock"
+su - linuxbrew -c "${HOMEBREW_PREFIX}/bin/brew bundle --file=/tmp/Brewfile"
 
 rm -f /tmp/Brewfile
 

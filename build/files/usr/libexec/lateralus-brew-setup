@@ -39,7 +39,7 @@ for brewfile in /usr/share/ublue-os/homebrew/*.Brewfile; do
         tmp_brewfile="/tmp/$(basename "$brewfile")"
         cp "$brewfile" "$tmp_brewfile"
         chown linuxbrew:linuxbrew "$tmp_brewfile"
-        su - linuxbrew -c "${HOMEBREW_PREFIX}/bin/brew bundle --file=${tmp_brewfile} --no-lock" || true
+        su - linuxbrew -c "${HOMEBREW_PREFIX}/bin/brew bundle --file=${tmp_brewfile}" || true
         rm -f "$tmp_brewfile"
     fi
 done
