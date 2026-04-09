@@ -89,9 +89,12 @@ echo "::group:: System-wide Brew PATH"
 # This is critical for existing users who rebase onto this image
 # Pattern from ublue-os/brew: only interactive shells, append (not prepend) to PATH
 # so system binaries always take priority over brew-installed ones
-# Use /usr/lib/ paths (immutable layer) — /etc is user-owned state on ostree
-mkdir -p /usr/lib/profile.d
-cat > /usr/lib/profile.d/lateralus-brew.sh << 'BREWPATHEOF'
+#
+# Bash: /etc/profile sources /etc/profile.d/*.sh (Fedora default).
+#       ostree 3-way-merges /etc on rebase, so build-time files persist fine.
+# Fish: brew-installed fish reads /usr/share/fish/vendor_conf.d/ (XDG vendor path).
+mkdir -p /etc/profile.d
+cat > /etc/profile.d/lateralus-brew.sh << 'BREWPATHEOF'
 # Add Homebrew to PATH for all users (interactive shells only)
 # Appends to PATH so system binaries take priority — prevents issues like
 # brew's p11-kit breaking Flatpak apps (ublue-os/bluefin#687)
@@ -102,8 +105,8 @@ if [[ -d /home/linuxbrew/.linuxbrew && $- == *i* ]]; then
 fi
 BREWPATHEOF
 
-mkdir -p /usr/lib/fish/conf.d
-cat > /usr/lib/fish/conf.d/lateralus-brew.fish << 'FISHBREWEOF'
+mkdir -p /usr/share/fish/vendor_conf.d
+cat > /usr/share/fish/vendor_conf.d/lateralus-brew.fish << 'FISHBREWEOF'
 # Add Homebrew to PATH for all fish users (interactive shells only)
 # Appends to PATH so system binaries take priority
 if test -d /home/linuxbrew/.linuxbrew; and status is-interactive

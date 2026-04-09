@@ -121,6 +121,11 @@ setup_user() {
     if [ -d "$sys_theme" ]; then
         mkdir -p "$user_theme"
         cp -f "$sys_theme"/* "$user_theme"/
+        # Remove the derived theme so COSMIC regenerates it from the Builder on next login.
+        # Without this, a stale derived theme from a previous rebase persists and the
+        # Builder changes (e.g. new accent colors) are never reflected in the UI.
+        rm -rf "${home}/.config/cosmic/com.system76.CosmicTheme.Dark/v1"
+        rm -rf "${home}/.config/cosmic/com.system76.CosmicTheme.Light/v1"
         chown -R "${user}:${user}" "${home}/.config/cosmic"
         echo "    Applied Evergreen theme"
     fi
