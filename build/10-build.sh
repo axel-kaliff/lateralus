@@ -90,9 +90,24 @@ echo "::group:: System-wide Brew PATH"
 # Pattern from ublue-os/brew: only interactive shells, append (not prepend) to PATH
 # so system binaries always take priority over brew-installed ones
 #
-# Bash: /etc/profile sources /etc/profile.d/*.sh (Fedora default).
-#       ostree 3-way-merges /etc on rebase, so build-time files persist fine.
-# Fish: brew-installed fish reads /usr/share/fish/vendor_conf.d/ (XDG vendor path).
+# Three layers — each covers a different session type:
+#   1. environment.d: graphical sessions via systemd user manager (all shells,
+#      all terminal emulators, regardless of login/non-login). Lives in /usr/lib
+#      (immutable, survives rebases). Does NOT affect SSH.
+#   2. /etc/profile.d: bash login shells (SSH, su -, terminals that open login
+#      shells). Also sets HOMEBREW_* env vars that environment.d can't eval.
+#      ostree 3-way-merges /etc on rebase, so build-time files persist fine.
+#   3. /usr/share/fish/vendor_conf.d: fish-specific config (XDG vendor path,
+#      immutable). Sets HOMEBREW_* and fish-native PATH append.
+
+# Layer 1: systemd environment.d — covers all graphical sessions
+mkdir -p /usr/lib/environment.d
+cat > /usr/lib/environment.d/50-lateralus-brew.conf << 'ENVDEOF'
+HOMEBREW_PREFIX=/home/linuxbrew/.linuxbrew
+PATH=${PATH}:${HOMEBREW_PREFIX}/bin:${HOMEBREW_PREFIX}/sbin
+ENVDEOF
+
+# Layer 2: bash login shells
 mkdir -p /etc/profile.d
 cat > /etc/profile.d/lateralus-brew.sh << 'BREWPATHEOF'
 # Add Homebrew to PATH for all users (interactive shells only)
@@ -105,6 +120,7 @@ if [[ -d /home/linuxbrew/.linuxbrew && $- == *i* ]]; then
 fi
 BREWPATHEOF
 
+# Layer 3: fish vendor config
 mkdir -p /usr/share/fish/vendor_conf.d
 cat > /usr/share/fish/vendor_conf.d/lateralus-brew.fish << 'FISHBREWEOF'
 # Add Homebrew to PATH for all fish users (interactive shells only)

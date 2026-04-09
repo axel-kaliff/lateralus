@@ -31,17 +31,19 @@ setup_user() {
 
     echo "  Setting up user ${user} for ${IMAGE_ID}..."
 
-    # Copy dotfiles repo to user's home (overwrite existing)
+    # Deploy dotfiles to user's home
     if [ -d "$DOTFILES_SRC" ]; then
-        # Remove old dotfiles dir (but preserve .git if user has their own clone)
         if [ -d "${dotfiles_dest}/.git" ]; then
-            echo "    User has own dotfiles git clone, updating files only..."
-            rsync -a --exclude='.git' "${DOTFILES_SRC}/" "${dotfiles_dest}/"
+            # User manages their own dotfiles clone — don't overwrite with stale
+            # build-time snapshot. Their auto-sync / manual pulls are the source
+            # of truth. Just re-stow below.
+            echo "    User has own dotfiles git clone, skipping file copy."
         else
+            # First install or user removed their clone — seed from the image
             rm -rf "${dotfiles_dest}"
             cp -a "${DOTFILES_SRC}" "${dotfiles_dest}"
+            chown -R "${user}:${user}" "${dotfiles_dest}"
         fi
-        chown -R "${user}:${user}" "${dotfiles_dest}"
     else
         echo "    WARNING: ${DOTFILES_SRC} not found, skipping dotfiles deploy."
         return
