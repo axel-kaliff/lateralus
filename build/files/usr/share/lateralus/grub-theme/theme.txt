@@ -1,10 +1,12 @@
-# Lateralus Evergreen GRUB Theme
+# Lateralus Third Eye GRUB Theme
+# Deep indigo background with gold/amber and violet accents
+# Matches the Plymouth sacred geometry boot splash
 
-# Dark green background
-desktop-color: "#141a14"
+# Deep indigo-black background
+desktop-color: "#0a0812"
 
 title-text: ""
-title-color: "#8ca88c"
+title-color: "#a68c66"
 title-font: "Unifont Regular 16"
 
 # Boot menu
@@ -13,8 +15,8 @@ title-font: "Unifont Regular 16"
     top = 30%
     width = 50%
     height = 50%
-    item_color = "#8ca88c"
-    selected_item_color = "#4db050"
+    item_color = "#a68c66"
+    selected_item_color = "#d9a633"
     item_height = 36
     item_padding = 8
     item_spacing = 4
@@ -35,7 +37,7 @@ title-font: "Unifont Regular 16"
     align = "center"
     id = "__timeout__"
     text = "Booting in %d seconds"
-    color = "#6b8a6b"
+    color = "#8c4da6"
     font = "Unifont Regular 14"
 }
 
@@ -46,6 +48,6 @@ title-font: "Unifont Regular 16"
     width = 100%
     align = "center"
     text = "L A T E R A L U S"
-    color = "#4db050"
+    color = "#f2bf33"
     font = "Unifont Regular 20"
 }
