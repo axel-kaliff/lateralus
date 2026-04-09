@@ -30,7 +30,8 @@ copr_install_isolated "ryanabx/cosmic-epoch" \
     cosmic-files \
     cosmic-edit \
     cosmic-term \
-    cosmic-workspaces
+    cosmic-workspaces \
+    xdg-desktop-portal-cosmic
 
 echo "COSMIC desktop installed successfully"
 echo "::endgroup::"
@@ -54,8 +55,7 @@ copr_install_isolated "pgdev/ghostty" \
 
 # Install additional utilities that work well with COSMIC
 dnf5 install -y \
-    flatpak \
-    xdg-desktop-portal-cosmic
+    flatpak
 
 echo "Additional utilities installed"
 echo "::endgroup::"

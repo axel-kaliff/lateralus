@@ -118,19 +118,6 @@ jobs:
           labels: ${{ steps.metadata.outputs.labels }}
           oci: false
 
-      - name: Rechunk Image
-        continue-on-error: true
-        run: |
-          # Rechunk optimizes layers for smaller OTA updates
-          # Falls back gracefully if bootc-base-imagectl is not available
-          sudo podman run --rm --privileged \
-            -v /var/lib/containers:/var/lib/containers \
-            --entrypoint /usr/libexec/bootc-base-imagectl \
-            "localhost/${{ env.IMAGE_NAME }}:${{ env.DEFAULT_TAG }}" \
-            rechunk --max-layers 96 \
-            "localhost/${{ env.IMAGE_NAME }}:${{ env.DEFAULT_TAG }}" \
-            "localhost/${{ env.IMAGE_NAME }}:${{ env.DEFAULT_TAG }}"
-
       # Tag for registry
       - name: Tag for registry
         run: |

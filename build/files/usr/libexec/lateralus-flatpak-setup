@@ -20,7 +20,7 @@ installed=$(flatpak list --app --columns=application 2>/dev/null || true)
 while IFS= read -r line; do
     # Skip comments and blank lines
     line="${line%%#*}"
-    line="${line// /}"
+    line="${line//[[:space:]]/}"
     [ -z "$line" ] && continue
 
     if echo "$installed" | grep -qx "$line"; then

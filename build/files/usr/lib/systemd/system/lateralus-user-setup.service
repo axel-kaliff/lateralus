@@ -1,6 +1,7 @@
 [Unit]
 Description=Apply lateralus dotfiles and theme for all users after rebase
 After=lateralus-brew-setup.service
+Requires=lateralus-brew-setup.service
 
 [Service]
 Type=oneshot

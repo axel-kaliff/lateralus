@@ -51,7 +51,8 @@ dnf5 install -y \
     bluez \
     firewalld \
     zram-generator \
-    gtk4-layer-shell
+    gtk4-layer-shell \
+    rsync
 
 # Tailscale - official repo
 dnf5 config-manager addrepo --from-repofile=https://pkgs.tailscale.com/stable/fedora/tailscale.repo

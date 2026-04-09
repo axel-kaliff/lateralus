@@ -25,9 +25,11 @@ benchmark:
         fi
     fi
     echo 'Running a 1 minute benchmark...'
-    pushd $(mktemp -d) > /dev/null
+    BENCH_DIR=$(mktemp -d)
+    pushd "$BENCH_DIR" > /dev/null
     stress-ng --matrix 0 -t 1m --times
     popd > /dev/null
+    rm -rf "$BENCH_DIR"
 
 # Configure docker and libvirt groups for development
 [group('System')]
@@ -125,6 +127,10 @@ setup:
     echo ""
     echo "Step 4: Setting fish as default shell..."
     FISH_PATH=$(command -v fish || echo /home/linuxbrew/.linuxbrew/bin/fish)
-    chsh -s "$FISH_PATH"
+    if [ ! -x "$FISH_PATH" ]; then
+        echo "WARNING: fish not found at ${FISH_PATH}, skipping shell change."
+    else
+        chsh -s "$FISH_PATH"
+    fi
     echo ""
     echo "Setup complete! Log out and back in to start using fish."

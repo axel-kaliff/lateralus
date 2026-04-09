@@ -59,9 +59,11 @@ setup_user() {
         return
     fi
 
-    # Remove existing files/symlinks that would conflict with stow.
+    # Back up and remove existing files/symlinks that would conflict with stow.
     # Stow refuses to overwrite files it doesn't own, so we clean first.
-    # Walk the dotfiles source and remove matching targets so stow can place its symlinks.
+    # Non-symlink files are backed up before removal so user customizations aren't lost.
+    local backup_dir="${home}/.config/.lateralus-backup/${IMAGE_ID}"
+
     remove_stow_conflicts() {
         local stow_dir="$1"   # directory containing the stow package
         local package="$2"    # package name
@@ -72,6 +74,12 @@ setup_user() {
             find "$pkg_dir" -type f -o -type l | while read -r src_file; do
                 local rel="${src_file#${pkg_dir}/}"
                 local dest="${target}/${rel}"
+                if [ -e "$dest" ] && [ ! -L "$dest" ]; then
+                    # Back up real files (not symlinks from previous stow runs)
+                    local backup_path="${backup_dir}/${rel}"
+                    mkdir -p "$(dirname "$backup_path")"
+                    cp -a "$dest" "$backup_path"
+                fi
                 if [ -e "$dest" ] || [ -L "$dest" ]; then
                     rm -f "$dest"
                 fi

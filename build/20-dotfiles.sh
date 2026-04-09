@@ -131,12 +131,6 @@ brew "vhs"
 # Developer workflow
 brew "mise"
 brew "lazydocker"
-
-# Nerd Fonts
-cask "font-fira-code-nerd-font"
-cask "font-jetbrains-mono-nerd-font"
-cask "font-meslo-lg-nerd-font"
-cask "font-hack-nerd-font"
 BREWEOF
 
 # Install brew packages as linuxbrew user
@@ -144,6 +138,28 @@ chown linuxbrew:linuxbrew /tmp/Brewfile
 su - linuxbrew -c "${HOMEBREW_PREFIX}/bin/brew bundle --file=/tmp/Brewfile"
 
 rm -f /tmp/Brewfile
+
+echo "::endgroup::"
+
+echo "::group:: Install Nerd Fonts"
+
+# Homebrew casks are macOS-only — install nerd fonts directly from GitHub releases
+NERD_FONTS_VERSION="v3.3.0"
+FONT_DIR="/usr/share/fonts/nerd-fonts"
+mkdir -p "${FONT_DIR}"
+
+for font in FiraCode JetBrainsMono Meslo Hack; do
+    echo "Installing ${font} Nerd Font..."
+    curl -fsSL --connect-timeout 30 --max-time 120 \
+        "https://github.com/ryanoasis/nerd-fonts/releases/download/${NERD_FONTS_VERSION}/${font}.tar.xz" \
+        -o "/tmp/${font}.tar.xz"
+    mkdir -p "${FONT_DIR}/${font}"
+    tar -xf "/tmp/${font}.tar.xz" -C "${FONT_DIR}/${font}"
+    rm -f "/tmp/${font}.tar.xz"
+done
+
+# Rebuild font cache
+fc-cache -f "${FONT_DIR}"
 
 echo "::endgroup::"
 
@@ -179,9 +195,8 @@ echo "::group:: Configure Git"
 # Uses command -v fallback so it works even if brew path changes
 git config --system credential.helper '!command -v gh >/dev/null && gh auth git-credential || /home/linuxbrew/.linuxbrew/bin/gh auth git-credential'
 
-# Pre-configure git identity and delta integration
-git config --system user.name "Axel Kaliff"
-git config --system user.email "axel.kaliff@protonmail.com"
+# Configure delta as system-wide pager (tools, not identity)
+# Identity (user.name, user.email) belongs in per-user dotfiles, not system config
 git config --system core.pager delta
 git config --system interactive.diffFilter "delta --color-only"
 git config --system delta.navigate true
