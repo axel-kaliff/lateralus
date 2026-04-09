@@ -1,0 +1,16 @@
+[Unit]
+Description=Homepage - Application dashboard
+After=network-online.target
+
+[Container]
+Image=ghcr.io/gethomepage/homepage:latest
+AutoUpdate=registry
+PublishPort=3000:3000
+Volume=homepage_config:/app/config
+
+[Service]
+Restart=always
+TimeoutStartSec=120
+
+[Install]
+WantedBy=default.target

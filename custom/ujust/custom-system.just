@@ -134,3 +134,52 @@ setup:
     fi
     echo ""
     echo "Setup complete! Log out and back in to start using fish."
+
+# List available Quadlet container services
+[group('Containers')]
+quadlets:
+    #!/usr/bin/bash
+    QUADLET_SRC="/usr/share/lateralus/quadlets"
+    echo "Available Quadlet services:"
+    echo ""
+    for f in "${QUADLET_SRC}"/*.container; do
+        name=$(basename "$f" .container)
+        desc=$(grep '^Description=' "$f" | head -1 | cut -d= -f2-)
+        printf "  %-15s %s\n" "$name" "$desc"
+    done
+    echo ""
+    echo "Enable with: ujust quadlet-enable <name>"
+    echo "Disable with: ujust quadlet-disable <name>"
+
+# Enable a Quadlet container service
+[group('Containers')]
+quadlet-enable name:
+    #!/usr/bin/bash
+    QUADLET_SRC="/usr/share/lateralus/quadlets"
+    QUADLET_DST="${HOME}/.config/containers/systemd"
+    FILE="{{ name }}.container"
+    if [ ! -f "${QUADLET_SRC}/${FILE}" ]; then
+        echo "Unknown quadlet: {{ name }}"
+        echo "Available: $(ls "${QUADLET_SRC}"/*.container 2>/dev/null | xargs -I{} basename {} .container | tr '\n' ' ')"
+        exit 1
+    fi
+    mkdir -p "${QUADLET_DST}"
+    cp "${QUADLET_SRC}/${FILE}" "${QUADLET_DST}/${FILE}"
+    systemctl --user daemon-reload
+    systemctl --user start "${FILE%.container}.service"
+    echo "Enabled {{ name }} — running as user service."
+
+# Disable a Quadlet container service
+[group('Containers')]
+quadlet-disable name:
+    #!/usr/bin/bash
+    QUADLET_DST="${HOME}/.config/containers/systemd"
+    FILE="{{ name }}.container"
+    if [ ! -f "${QUADLET_DST}/${FILE}" ]; then
+        echo "{{ name }} is not enabled."
+        exit 0
+    fi
+    systemctl --user stop "${FILE%.container}.service" || true
+    rm -f "${QUADLET_DST}/${FILE}"
+    systemctl --user daemon-reload
+    echo "Disabled {{ name }}."

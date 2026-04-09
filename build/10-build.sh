@@ -40,6 +40,9 @@ find /ctx/custom/ujust -iname '*.just' -exec printf "\n\n" \; -exec cat {} \; >>
 mkdir -p /usr/share/lateralus
 cp /ctx/custom/flatpaks/install.list /usr/share/lateralus/flatpaks.list
 
+# Copy Quadlet container definitions
+cp -r /ctx/build/files/usr/share/lateralus/quadlets /usr/share/lateralus/quadlets
+
 echo "::endgroup::"
 
 echo "::group:: Install Packages"
@@ -74,6 +77,8 @@ install -Dm644 /ctx/build/files/usr/lib/systemd/system/lateralus-user-setup.serv
 install -Dm644 /ctx/build/files/usr/lib/systemd/system/lateralus-flatpak-setup.service /usr/lib/systemd/system/lateralus-flatpak-setup.service
 install -Dm644 /ctx/build/files/usr/lib/tmpfiles.d/lateralus-homebrew.conf /usr/lib/tmpfiles.d/lateralus-homebrew.conf
 install -Dm644 /ctx/build/files/usr/lib/sysusers.d/lateralus-homebrew.conf /usr/lib/sysusers.d/lateralus-homebrew.conf
+install -Dm644 /ctx/build/files/usr/lib/systemd/system/lateralus-auto-upgrade.service /usr/lib/systemd/system/lateralus-auto-upgrade.service
+install -Dm644 /ctx/build/files/usr/lib/systemd/system/lateralus-auto-upgrade.timer /usr/lib/systemd/system/lateralus-auto-upgrade.timer
 
 echo "::endgroup::"
 
@@ -121,6 +126,8 @@ systemctl enable firewalld
 systemctl enable lateralus-brew-setup.service
 systemctl enable lateralus-user-setup.service
 systemctl enable lateralus-flatpak-setup.service
+systemctl enable lateralus-auto-upgrade.timer
+systemctl enable podman-auto-update.timer
 
 # Pre-enable user services for new users via /etc/skel
 mkdir -p /etc/skel/.config/systemd/user/default.target.wants

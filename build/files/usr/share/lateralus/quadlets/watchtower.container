@@ -1,0 +1,17 @@
+[Unit]
+Description=Watchtower - Automatic container image updates
+After=network-online.target
+
+[Container]
+Image=docker.io/containrrr/watchtower:latest
+AutoUpdate=registry
+Volume=/run/podman/podman.sock:/var/run/docker.sock:ro
+Environment=WATCHTOWER_CLEANUP=true
+Environment=WATCHTOWER_POLL_INTERVAL=86400
+
+[Service]
+Restart=always
+TimeoutStartSec=120
+
+[Install]
+WantedBy=default.target

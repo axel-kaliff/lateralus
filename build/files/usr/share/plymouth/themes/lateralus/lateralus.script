@@ -1,0 +1,76 @@
+// Lateralus Evergreen Plymouth Theme
+// Dark background with green pulsing spinner
+
+// Background: dark green (#141a14)
+Window.SetBackgroundTopColor(0.08, 0.10, 0.08);
+Window.SetBackgroundBottomColor(0.04, 0.06, 0.04);
+
+// Spinner animation — pulsing green dot
+NUM_DOTS = 5;
+DOT_RADIUS = 6;
+RING_RADIUS = 40;
+
+sprites = [];
+for (i = 0; i < NUM_DOTS; i++) {
+    // Create dot images with varying green brightness
+    dot = Image.Text("●", 0.30, 0.69, 0.31);
+    sprites[i] = Sprite(dot);
+    sprites[i].SetOpacity(0.0);
+}
+
+center_x = Window.GetX() + Window.GetWidth() / 2;
+center_y = Window.GetY() + Window.GetHeight() / 2 + 80;
+
+// Title text
+title = Image.Text("L A T E R A L U S", 0.55, 0.65, 0.55, 1, "Sans 14");
+title_sprite = Sprite(title);
+title_sprite.SetX(center_x - title.GetWidth() / 2);
+title_sprite.SetY(center_y - 100);
+title_sprite.SetOpacity(0.9);
+
+progress = 0;
+
+fun refresh_callback() {
+    progress++;
+    for (i = 0; i < NUM_DOTS; i++) {
+        angle = (progress * 0.04) + (i * 2 * 3.14159 / NUM_DOTS);
+        x = center_x + Math.Int(RING_RADIUS * Math.Cos(angle)) - DOT_RADIUS;
+        y = center_y + Math.Int(RING_RADIUS * Math.Sin(angle)) - DOT_RADIUS;
+        sprites[i].SetX(x);
+        sprites[i].SetY(y);
+
+        // Fade dots based on position in ring
+        phase = (Math.Cos(angle - progress * 0.04) + 1) / 2;
+        sprites[i].SetOpacity(0.2 + phase * 0.8);
+    }
+}
+
+Plymouth.SetRefreshFunction(refresh_callback);
+
+// Password prompt styling
+fun display_password_callback(prompt, bullets) {
+    pw_label = Image.Text(prompt, 0.55, 0.65, 0.55, 1, "Sans 12");
+    pw_sprite = Sprite(pw_label);
+    pw_sprite.SetX(center_x - pw_label.GetWidth() / 2);
+    pw_sprite.SetY(center_y + 60);
+
+    bullet_str = "";
+    for (i = 0; i < bullets; i++)
+        bullet_str += "● ";
+    pw_dots = Image.Text(bullet_str, 0.30, 0.69, 0.31, 1, "Sans 14");
+    pw_dot_sprite = Sprite(pw_dots);
+    pw_dot_sprite.SetX(center_x - pw_dots.GetWidth() / 2);
+    pw_dot_sprite.SetY(center_y + 90);
+}
+
+Plymouth.SetDisplayPasswordFunction(display_password_callback);
+
+// Message display
+fun message_callback(text) {
+    msg = Image.Text(text, 0.55, 0.65, 0.55, 1, "Sans 10");
+    msg_sprite = Sprite(msg);
+    msg_sprite.SetX(center_x - msg.GetWidth() / 2);
+    msg_sprite.SetY(center_y + 140);
+}
+
+Plymouth.SetMessageFunction(message_callback);

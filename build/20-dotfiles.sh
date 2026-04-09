@@ -133,7 +133,13 @@ BREWEOF
 
 # Install brew packages as linuxbrew user
 chown linuxbrew:linuxbrew /tmp/Brewfile
-su - linuxbrew -c "${HOMEBREW_PREFIX}/bin/brew bundle --file=/tmp/Brewfile"
+# ugrep creates a broken ug+ bash-completion symlink that blocks linking of later
+# formulas. Force-overwrite ugrep links first, then run the full bundle.
+su - linuxbrew -c "${HOMEBREW_PREFIX}/bin/brew bundle --file=/tmp/Brewfile" || {
+    echo "Retrying after fixing ugrep link conflict..."
+    su - linuxbrew -c "${HOMEBREW_PREFIX}/bin/brew link --overwrite ugrep" || true
+    su - linuxbrew -c "${HOMEBREW_PREFIX}/bin/brew bundle --file=/tmp/Brewfile"
+}
 
 rm -f /tmp/Brewfile
 

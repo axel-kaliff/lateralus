@@ -1,0 +1,11 @@
+[Unit]
+Description=Stage bootc image upgrade for next boot
+Wants=network-online.target
+After=network-online.target
+Documentation=man:bootc-upgrade(8)
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/bootc upgrade
+StandardOutput=journal
+StandardError=journal

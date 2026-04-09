@@ -1,0 +1,51 @@
+# Lateralus Evergreen GRUB Theme
+
+# Dark green background
+desktop-color: "#141a14"
+
+title-text: ""
+title-color: "#8ca88c"
+title-font: "Unifont Regular 16"
+
+# Boot menu
++ boot_menu {
+    left = 25%
+    top = 30%
+    width = 50%
+    height = 50%
+    item_color = "#8ca88c"
+    selected_item_color = "#4db050"
+    item_height = 36
+    item_padding = 8
+    item_spacing = 4
+    selected_item_pixmap_style = "select_*.png"
+    icon_height = 28
+    icon_width = 28
+    item_icon_space = 12
+    scrollbar = true
+    scrollbar_width = 4
+    scrollbar_thumb = "slider_*.png"
+}
+
+# Countdown label
++ label {
+    left = 35%
+    top = 85%
+    width = 30%
+    align = "center"
+    id = "__timeout__"
+    text = "Booting in %d seconds"
+    color = "#6b8a6b"
+    font = "Unifont Regular 14"
+}
+
+# Title
++ label {
+    left = 0
+    top = 10%
+    width = 100%
+    align = "center"
+    text = "L A T E R A L U S"
+    color = "#4db050"
+    font = "Unifont Regular 20"
+}

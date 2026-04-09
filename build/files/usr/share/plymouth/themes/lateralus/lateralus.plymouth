@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=Lateralus
+Description=Lateralus Evergreen boot splash
+ModuleName=script
+
+[script]
+ScriptFile=/usr/share/plymouth/themes/lateralus/lateralus.script
+ImageDir=/usr/share/plymouth/themes/lateralus/

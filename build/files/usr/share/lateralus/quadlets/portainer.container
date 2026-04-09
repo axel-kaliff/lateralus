@@ -1,0 +1,17 @@
+[Unit]
+Description=Portainer Container Management UI
+After=network-online.target
+
+[Container]
+Image=docker.io/portainer/portainer-ce:latest
+AutoUpdate=registry
+PublishPort=9443:9443
+Volume=portainer_data:/data
+Volume=/run/podman/podman.sock:/var/run/docker.sock:ro
+
+[Service]
+Restart=always
+TimeoutStartSec=120
+
+[Install]
+WantedBy=default.target
