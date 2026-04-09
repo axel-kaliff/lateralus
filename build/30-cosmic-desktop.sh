@@ -67,9 +67,9 @@ GHOSTTY_BUILD_DEPS=(
 dnf5 install -y "${GHOSTTY_BUILD_DEPS[@]}"
 
 # Fetch Zig compiler (static binary, no install needed)
-curl -fsSL "https://ziglang.org/download/${ZIG_VERSION}/zig-linux-x86_64-${ZIG_VERSION}.tar.xz" \
+curl -fsSL "https://ziglang.org/download/${ZIG_VERSION}/zig-x86_64-linux-${ZIG_VERSION}.tar.xz" \
     | tar -xJ -C /tmp
-ZIG="/tmp/zig-linux-x86_64-${ZIG_VERSION}/zig"
+ZIG="/tmp/zig-x86_64-linux-${ZIG_VERSION}/zig"
 
 # Fetch and build Ghostty
 curl -fsSL "https://release.files.ghostty.org/${GHOSTTY_VERSION}/ghostty-${GHOSTTY_VERSION}.tar.gz" \
