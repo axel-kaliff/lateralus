@@ -50,7 +50,6 @@ dnf5 install -y \
     power-profiles-daemon \
     bluez \
     firewalld \
-    pipewire-codec-aptx \
     zram-generator \
     gtk4-layer-shell
 

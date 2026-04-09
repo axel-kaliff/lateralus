@@ -82,7 +82,7 @@ RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
     --mount=type=tmpfs,dst=/tmp \
     for script in /ctx/build/[0-9]*.sh; do \
         echo "Running ${script}..." && \
-        bash "${script}"; \
+        bash "${script}" || exit 1; \
     done
     
 ### LINTING
