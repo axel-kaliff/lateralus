@@ -115,7 +115,7 @@ brew "age"
 brew "sops"
 
 # AI coding
-brew "aider-chat"
+brew "aider"
 
 # Modern CLI replacements
 brew "sd"

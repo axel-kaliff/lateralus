@@ -47,7 +47,7 @@ brew "tree-sitter"
 
 # AI/LLM
 brew "ollama"
-brew "aider-chat"
+brew "aider"
 
 # Container tools
 brew "dive"
