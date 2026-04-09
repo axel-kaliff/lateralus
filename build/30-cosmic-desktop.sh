@@ -75,7 +75,7 @@ ZIG="/tmp/zig-x86_64-linux-${ZIG_VERSION}/zig"
 curl -fsSL "https://release.files.ghostty.org/${GHOSTTY_VERSION}/ghostty-${GHOSTTY_VERSION}.tar.gz" \
     | tar -xz -C /tmp
 cd "/tmp/ghostty-${GHOSTTY_VERSION}"
-"${ZIG}" build -Doptimize=ReleaseFast -p /usr
+XDG_CACHE_HOME=/tmp/.cache "${ZIG}" build -Doptimize=ReleaseFast -p /usr
 cd /
 
 # Clean up build artifacts and Zig compiler
