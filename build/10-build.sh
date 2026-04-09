@@ -52,7 +52,9 @@ dnf5 install -y \
     firewalld \
     zram-generator \
     gtk4-layer-shell \
-    rsync
+    rsync \
+    wl-clipboard \
+    gcc
 
 # Tailscale - official repo
 dnf5 config-manager addrepo --from-repofile=https://pkgs.tailscale.com/stable/fedora/tailscale.repo

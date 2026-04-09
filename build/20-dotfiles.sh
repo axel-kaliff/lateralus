@@ -39,7 +39,6 @@ echo "::group:: Install Brew Packages"
 # Install all brew packages
 cat > /tmp/Brewfile << 'BREWEOF'
 # CLI tools (from dotfiles)
-brew "gcc"
 brew "fish"
 brew "bat"
 brew "delta"
@@ -83,7 +82,6 @@ brew "markdownlint-cli"
 brew "tree-sitter"
 
 # System tools
-brew "clipboard"
 brew "distrobox"
 
 # AI/LLM

@@ -2,7 +2,6 @@
 # This file is kept for runtime brew bundle updates
 
 # CLI tools (from dotfiles)
-brew "gcc"
 brew "fish"
 brew "bat"
 brew "delta"
@@ -90,5 +89,4 @@ brew "age"
 brew "sops"
 
 # System tools
-brew "clipboard"
 brew "distrobox"
