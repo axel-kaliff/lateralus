@@ -1,76 +1,228 @@
-// Lateralus Evergreen Plymouth Theme
-// Dark background with green pulsing spinner
+// Lateralus Third Eye — Plymouth boot theme
+// Sacred geometry mandala with awakening third eye
+// Inspired by Alex Grey's artwork for Tool
+//
+// Palette: deep indigo background, gold/amber eye, violet-to-indigo mandala
+// The eye opens during boot while concentric Fibonacci-count rings bloom outward
 
-// Background: dark green (#141a14)
-Window.SetBackgroundTopColor(0.08, 0.10, 0.08);
-Window.SetBackgroundBottomColor(0.04, 0.06, 0.04);
-
-// Spinner animation — pulsing green dot
-NUM_DOTS = 5;
-DOT_RADIUS = 6;
-RING_RADIUS = 40;
-
-sprites = [];
-for (i = 0; i < NUM_DOTS; i++) {
-    // Create dot images with varying green brightness
-    dot = Image.Text("●", 0.30, 0.69, 0.31);
-    sprites[i] = Sprite(dot);
-    sprites[i].SetOpacity(0.0);
-}
+// ── Background: deep indigo-black ───────────────────────────────────────────
+Window.SetBackgroundTopColor(0.04, 0.03, 0.07);
+Window.SetBackgroundBottomColor(0.06, 0.04, 0.10);
 
 center_x = Window.GetX() + Window.GetWidth() / 2;
-center_y = Window.GetY() + Window.GetHeight() / 2 + 80;
+center_y = Window.GetY() + Window.GetHeight() / 2;
+PI = 3.14159;
+DOT_W = 6; // approximate half-width of a glyph for centering
 
-// Title text
-title = Image.Text("L A T E R A L U S", 0.55, 0.65, 0.55, 1, "Sans 14");
+// ── Title ───────────────────────────────────────────────────────────────────
+title = Image.Text("L A T E R A L U S", 0.65, 0.55, 0.40, 1, "Sans 14");
 title_sprite = Sprite(title);
 title_sprite.SetX(center_x - title.GetWidth() / 2);
-title_sprite.SetY(center_y - 100);
-title_sprite.SetOpacity(0.9);
+title_sprite.SetY(center_y + 240);
+title_sprite.SetOpacity(0.0);
 
+// ── The Eye ─────────────────────────────────────────────────────────────────
+// Almond-shaped eye formed by upper and lower cosine arcs
+EYE_WIDTH = 110;
+EYE_UPPER = 32;
+EYE_LOWER = 22;
+NUM_LID = 11;
+
+// Pupil — brightest point, center of consciousness
+pupil_img = Image.Text("●", 0.95, 0.75, 0.20);
+pupil_sprite = Sprite(pupil_img);
+pupil_sprite.SetOpacity(0.0);
+
+// Upper eyelid
+upper_lid = [];
+for (i = 0; i < NUM_LID; i++) {
+    img = Image.Text("●", 0.85, 0.65, 0.20);
+    upper_lid[i] = Sprite(img);
+    upper_lid[i].SetOpacity(0.0);
+}
+
+// Lower eyelid
+lower_lid = [];
+for (i = 0; i < NUM_LID; i++) {
+    img = Image.Text("●", 0.85, 0.65, 0.20);
+    lower_lid[i] = Sprite(img);
+    lower_lid[i].SetOpacity(0.0);
+}
+
+// Iris — ring of golden dots orbiting the pupil
+NUM_IRIS = 8;
+IRIS_RADIUS = 20;
+iris = [];
+for (i = 0; i < NUM_IRIS; i++) {
+    img = Image.Text("●", 0.90, 0.70, 0.15);
+    iris[i] = Sprite(img);
+    iris[i].SetOpacity(0.0);
+}
+
+// ── Sacred Geometry Mandala ─────────────────────────────────────────────────
+// Three concentric rings with Fibonacci dot counts, counter-rotating
+// Colors shift from violet (inner) through purple to deep indigo (outer)
+RING1_N = 8;   RING1_R = 85;
+RING2_N = 13;  RING2_R = 140;
+RING3_N = 21;  RING3_R = 200;
+
+ring1 = [];
+for (i = 0; i < RING1_N; i++) {
+    img = Image.Text("●", 0.55, 0.30, 0.65);
+    ring1[i] = Sprite(img);
+    ring1[i].SetOpacity(0.0);
+}
+
+ring2 = [];
+for (i = 0; i < RING2_N; i++) {
+    img = Image.Text("●", 0.40, 0.22, 0.55);
+    ring2[i] = Sprite(img);
+    ring2[i].SetOpacity(0.0);
+}
+
+ring3 = [];
+for (i = 0; i < RING3_N; i++) {
+    img = Image.Text("●", 0.28, 0.18, 0.42);
+    ring3[i] = Sprite(img);
+    ring3[i].SetOpacity(0.0);
+}
+
+// ── Animation ───────────────────────────────────────────────────────────────
 progress = 0;
 
 fun refresh_callback() {
     progress++;
-    for (i = 0; i < NUM_DOTS; i++) {
-        angle = (progress * 0.04) + (i * 2 * 3.14159 / NUM_DOTS);
-        x = center_x + Math.Int(RING_RADIUS * Math.Cos(angle)) - DOT_RADIUS;
-        y = center_y + Math.Int(RING_RADIUS * Math.Sin(angle)) - DOT_RADIUS;
-        sprites[i].SetX(x);
-        sprites[i].SetY(y);
 
-        // Fade dots based on position in ring
-        phase = (Math.Cos(angle - progress * 0.04) + 1) / 2;
-        sprites[i].SetOpacity(0.2 + phase * 0.8);
+    // ── Awakening sequence ──────────────────────────────────────────────
+    // Eye opens over ~5 seconds, mandala rings bloom outward in sequence
+
+    // Eye opening: ramps 0→1 over first 150 frames
+    eye_open = progress / 150;
+    if (eye_open > 1) eye_open = 1;
+
+    // Breathing: gentle oscillation once open
+    breath = (0.3 + 0.7 * eye_open) * (0.88 + 0.12 * Math.Sin(progress * 0.025));
+
+    // Staggered ring bloom
+    ring1_fade = (progress - 60) / 60;
+    if (ring1_fade < 0) ring1_fade = 0;
+    if (ring1_fade > 1) ring1_fade = 1;
+
+    ring2_fade = (progress - 100) / 60;
+    if (ring2_fade < 0) ring2_fade = 0;
+    if (ring2_fade > 1) ring2_fade = 1;
+
+    ring3_fade = (progress - 140) / 60;
+    if (ring3_fade < 0) ring3_fade = 0;
+    if (ring3_fade > 1) ring3_fade = 1;
+
+    // Title appears last
+    title_fade = (progress - 180) / 60;
+    if (title_fade < 0) title_fade = 0;
+    if (title_fade > 1) title_fade = 1;
+    title_sprite.SetOpacity(0.85 * title_fade);
+
+    // ── Pupil ───────────────────────────────────────────────────────────
+    pupil_pulse = 0.6 + 0.4 * Math.Sin(progress * 0.05);
+    pupil_sprite.SetX(center_x - DOT_W);
+    pupil_sprite.SetY(center_y - DOT_W);
+    pupil_sprite.SetOpacity(pupil_pulse * eye_open);
+
+    // ── Iris ring ───────────────────────────────────────────────────────
+    iris_r = IRIS_RADIUS * breath;
+    for (i = 0; i < NUM_IRIS; i++) {
+        angle = (progress * 0.03) + (i * 2 * PI / NUM_IRIS);
+        x = center_x + Math.Int(iris_r * Math.Cos(angle)) - DOT_W;
+        y = center_y + Math.Int(iris_r * Math.Sin(angle)) - DOT_W;
+        iris[i].SetX(x);
+        iris[i].SetY(y);
+
+        phase = (Math.Cos(angle - progress * 0.03) + 1) / 2;
+        iris[i].SetOpacity((0.3 + phase * 0.7) * eye_open);
+    }
+
+    // ── Eye lids ────────────────────────────────────────────────────────
+    for (i = 0; i < NUM_LID; i++) {
+        t = PI * i / (NUM_LID - 1);
+        x = center_x + Math.Int(EYE_WIDTH * Math.Cos(t)) - DOT_W;
+
+        // Upper arc
+        y_up = center_y - Math.Int(EYE_UPPER * breath * Math.Sin(t)) - DOT_W;
+        upper_lid[i].SetX(x);
+        upper_lid[i].SetY(y_up);
+        lid_op = (0.3 + 0.7 * Math.Sin(t)) * eye_open;
+        upper_lid[i].SetOpacity(lid_op);
+
+        // Lower arc
+        y_lo = center_y + Math.Int(EYE_LOWER * breath * Math.Sin(t)) - DOT_W;
+        lower_lid[i].SetX(x);
+        lower_lid[i].SetY(y_lo);
+        lower_lid[i].SetOpacity(lid_op);
+    }
+
+    // ── Ring 1 — inner, clockwise ───────────────────────────────────────
+    for (i = 0; i < RING1_N; i++) {
+        angle = (progress * 0.022) + (i * 2 * PI / RING1_N);
+        x = center_x + Math.Int(RING1_R * Math.Cos(angle)) - DOT_W;
+        y = center_y + Math.Int(RING1_R * Math.Sin(angle)) - DOT_W;
+        ring1[i].SetX(x);
+        ring1[i].SetY(y);
+
+        phase = (Math.Sin(progress * 0.035 + i * 0.8) + 1) / 2;
+        ring1[i].SetOpacity((0.25 + phase * 0.55) * ring1_fade);
+    }
+
+    // ── Ring 2 — middle, counter-clockwise ──────────────────────────────
+    for (i = 0; i < RING2_N; i++) {
+        angle = -(progress * 0.015) + (i * 2 * PI / RING2_N);
+        x = center_x + Math.Int(RING2_R * Math.Cos(angle)) - DOT_W;
+        y = center_y + Math.Int(RING2_R * Math.Sin(angle)) - DOT_W;
+        ring2[i].SetX(x);
+        ring2[i].SetY(y);
+
+        phase = (Math.Sin(progress * 0.028 + i * 0.5) + 1) / 2;
+        ring2[i].SetOpacity((0.20 + phase * 0.45) * ring2_fade);
+    }
+
+    // ── Ring 3 — outer, slow clockwise ──────────────────────────────────
+    for (i = 0; i < RING3_N; i++) {
+        angle = (progress * 0.008) + (i * 2 * PI / RING3_N);
+        x = center_x + Math.Int(RING3_R * Math.Cos(angle)) - DOT_W;
+        y = center_y + Math.Int(RING3_R * Math.Sin(angle)) - DOT_W;
+        ring3[i].SetX(x);
+        ring3[i].SetY(y);
+
+        phase = (Math.Sin(progress * 0.02 + i * 0.3) + 1) / 2;
+        ring3[i].SetOpacity((0.15 + phase * 0.35) * ring3_fade);
     }
 }
 
 Plymouth.SetRefreshFunction(refresh_callback);
 
-// Password prompt styling
+// ── Password prompt ─────────────────────────────────────────────────────────
 fun display_password_callback(prompt, bullets) {
-    pw_label = Image.Text(prompt, 0.55, 0.65, 0.55, 1, "Sans 12");
+    pw_label = Image.Text(prompt, 0.65, 0.55, 0.40, 1, "Sans 12");
     pw_sprite = Sprite(pw_label);
     pw_sprite.SetX(center_x - pw_label.GetWidth() / 2);
-    pw_sprite.SetY(center_y + 60);
+    pw_sprite.SetY(center_y + 270);
 
     bullet_str = "";
     for (i = 0; i < bullets; i++)
         bullet_str += "● ";
-    pw_dots = Image.Text(bullet_str, 0.30, 0.69, 0.31, 1, "Sans 14");
+    pw_dots = Image.Text(bullet_str, 0.85, 0.65, 0.20, 1, "Sans 14");
     pw_dot_sprite = Sprite(pw_dots);
     pw_dot_sprite.SetX(center_x - pw_dots.GetWidth() / 2);
-    pw_dot_sprite.SetY(center_y + 90);
+    pw_dot_sprite.SetY(center_y + 300);
 }
 
 Plymouth.SetDisplayPasswordFunction(display_password_callback);
 
-// Message display
+// ── System messages ─────────────────────────────────────────────────────────
 fun message_callback(text) {
-    msg = Image.Text(text, 0.55, 0.65, 0.55, 1, "Sans 10");
+    msg = Image.Text(text, 0.65, 0.55, 0.40, 1, "Sans 10");
     msg_sprite = Sprite(msg);
     msg_sprite.SetX(center_x - msg.GetWidth() / 2);
-    msg_sprite.SetY(center_y + 140);
+    msg_sprite.SetY(center_y + 340);
 }
 
 Plymouth.SetMessageFunction(message_callback);
