@@ -19,7 +19,7 @@ HOMEBREW_PREFIX="/home/linuxbrew/.linuxbrew"
 # at boot, but we need the user during build too
 # On ostree images, /home is a symlink to /var/home which may not exist during build
 mkdir -p /var/home
-systemd-sysusers /usr/lib/sysusers.d/lateralus-homebrew.conf 2>/dev/null || useradd -r -d /home/linuxbrew linuxbrew 2>/dev/null || true
+systemd-sysusers /usr/lib/sysusers.d/lateralus-homebrew.conf 2>/dev/null || useradd -r -d /home/linuxbrew -s /bin/bash linuxbrew 2>/dev/null || true
 mkdir -p /home/linuxbrew
 mkdir -p "${HOMEBREW_PREFIX}"
 chown -R linuxbrew:linuxbrew /home/linuxbrew

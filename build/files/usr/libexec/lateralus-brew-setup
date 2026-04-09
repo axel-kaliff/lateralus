@@ -8,7 +8,7 @@ HOMEBREW_TARBALL="/usr/share/lateralus/homebrew.tar.zst"
 
 # Create the linuxbrew user if it doesn't exist
 if ! id linuxbrew &>/dev/null; then
-    useradd -m -d /home/linuxbrew linuxbrew
+    useradd -m -d /home/linuxbrew -s /bin/bash linuxbrew
 fi
 mkdir -p /home/linuxbrew
 chown linuxbrew:linuxbrew /home/linuxbrew
