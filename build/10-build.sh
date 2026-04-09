@@ -57,7 +57,8 @@ dnf5 install -y \
     gtk4-layer-shell \
     rsync \
     wl-clipboard \
-    gcc
+    gcc \
+    plymouth-plugin-script
 
 # Tailscale - official repo
 dnf5 config-manager addrepo --from-repofile=https://pkgs.tailscale.com/stable/fedora/tailscale.repo
