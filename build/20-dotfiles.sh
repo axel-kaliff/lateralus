@@ -27,7 +27,9 @@ chown -R linuxbrew:linuxbrew /home/linuxbrew
 # Install Homebrew as linuxbrew user (installer refuses root)
 # Export NONINTERACTIVE before su to ensure it propagates
 export NONINTERACTIVE=1
-su - linuxbrew -c 'export NONINTERACTIVE=1; /usr/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"'
+# Pin to a specific commit to avoid supply-chain risk from fetching HEAD
+BREW_INSTALL_COMMIT="6d5e2670d07961e7985d2079a2f0a484420f3c38"
+su - linuxbrew -c "export NONINTERACTIVE=1; /usr/bin/bash -c \"\$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/${BREW_INSTALL_COMMIT}/install.sh)\""
 
 # Make brew accessible
 eval "$("${HOMEBREW_PREFIX}/bin/brew" shellenv)"
@@ -148,7 +150,7 @@ echo "::endgroup::"
 echo "::group:: Install Nerd Fonts"
 
 # Homebrew casks are macOS-only — install nerd fonts directly from GitHub releases
-NERD_FONTS_VERSION="v3.3.0"
+NERD_FONTS_VERSION="v3.4.0"
 FONT_DIR="/usr/share/fonts/nerd-fonts"
 mkdir -p "${FONT_DIR}"
 

@@ -22,13 +22,19 @@ copr_install_isolated() {
 
     echo "Installing ${packages[*]} from COPR $copr_name (isolated)"
 
+    # Ensure repo files are cleaned up even if install fails
+    cleanup_copr() {
+        rm -f "/etc/yum.repos.d/_copr:copr.fedorainfracloud.org:${copr_name//\//:}.repo"
+        rm -f "/etc/yum.repos.d/_copr_copr.fedorainfracloud.org_${copr_name//\//_}.repo"
+    }
+    trap cleanup_copr EXIT
+
     dnf5 -y copr enable "$copr_name"
     dnf5 -y copr disable "$copr_name"
     dnf5 -y install --enablerepo="$repo_id" "${packages[@]}"
 
-    # Clean up repo file from /etc/yum.repos.d/ to avoid ostree 3-way merge issues
-    rm -f /etc/yum.repos.d/_copr:copr.fedorainfracloud.org:${copr_name//\//:}.repo
-    rm -f /etc/yum.repos.d/_copr_copr.fedorainfracloud.org_${copr_name//\//_}.repo
+    cleanup_copr
+    trap - EXIT
 
     echo "Installed ${packages[*]} from $copr_name"
 }
