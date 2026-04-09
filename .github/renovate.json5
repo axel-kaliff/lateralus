@@ -31,6 +31,17 @@
       datasourceTemplate: 'docker',
       versioningTemplate: 'docker',
     },
+    {
+      customType: 'regex',
+      description: 'Track Ghostty releases in build script',
+      managerFilePatterns: [
+        'build/30-cosmic-desktop\\.sh$',
+      ],
+      matchStrings: [
+        '# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\nGHOSTTY_VERSION="(?<currentValue>\\S+?)"',
+      ],
+      extractVersionTemplate: '^v?(?<version>.*)$',
+    },
   ],
 
   "packageRules": [
@@ -45,6 +56,11 @@
       "matchUpdateTypes": ["digest"],
       "matchFileNames": ["Containerfile"],
       "labels": ["renovate", "automerge"],
+    },
+    {
+      "description": "Ghostty bumps require matching Zig version — review before merging",
+      "automerge": false,
+      "matchDepNames": ["ghostty-org/ghostty"],
     },
     {
       "description": "Disable automerge for all rechunk updates to allow manual review",

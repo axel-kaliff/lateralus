@@ -47,11 +47,47 @@ systemctl enable cosmic-greeter
 echo "Display manager configured"
 echo "::endgroup::"
 
-echo "::group:: Install Additional Utilities"
+echo "::group:: Build Ghostty Terminal from Source"
 
-# Install Ghostty terminal from COPR
-copr_install_isolated "pgdev/ghostty" \
-    ghostty
+# Build from source to get a pinned, up-to-date version — no COPR dependency.
+# IMPORTANT: Update ZIG_VERSION when bumping Ghostty — check the compatibility
+# table at https://ghostty.org/docs/install/build
+# renovate: datasource=github-releases depName=ghostty-org/ghostty
+GHOSTTY_VERSION="1.3.0"
+ZIG_VERSION="0.15.2"
+
+# Build-only deps — removed after install to keep the image lean
+GHOSTTY_BUILD_DEPS=(
+    gtk4-devel
+    gtk4-layer-shell-devel
+    libadwaita-devel
+    gettext
+    pkg-config
+)
+dnf5 install -y "${GHOSTTY_BUILD_DEPS[@]}"
+
+# Fetch Zig compiler (static binary, no install needed)
+curl -fsSL "https://ziglang.org/download/${ZIG_VERSION}/zig-linux-x86_64-${ZIG_VERSION}.tar.xz" \
+    | tar -xJ -C /tmp
+ZIG="/tmp/zig-linux-x86_64-${ZIG_VERSION}/zig"
+
+# Fetch and build Ghostty
+curl -fsSL "https://release.files.ghostty.org/${GHOSTTY_VERSION}/ghostty-${GHOSTTY_VERSION}.tar.gz" \
+    | tar -xz -C /tmp
+cd "/tmp/ghostty-${GHOSTTY_VERSION}"
+"${ZIG}" build -Doptimize=ReleaseFast -p /usr
+cd /
+
+# Clean up build artifacts and Zig compiler
+rm -rf /tmp/zig-* /tmp/ghostty-*
+
+# Remove -devel packages (headers/pkgconfig only — runtime libs stay via COSMIC deps)
+dnf5 remove -y "${GHOSTTY_BUILD_DEPS[@]}" --noautoremove
+
+echo "Ghostty ${GHOSTTY_VERSION} built and installed"
+echo "::endgroup::"
+
+echo "::group:: Install Additional Utilities"
 
 # Install additional utilities that work well with COSMIC
 dnf5 install -y \
