@@ -18,7 +18,7 @@ title-text: ""
     font = "Unifont Regular 20"
 }
 
-# Boot menu — compact, blends with background via menu_pixmap_style PNGs
+# Boot menu — compact, colored entries on dark background
 + boot_menu {
     left = 30%
     top = 42%

@@ -64,14 +64,17 @@ GHOSTTY_VERSION="1.3.0"
 ZIG_VERSION="0.15.2"
 
 # Build-only deps — removed after install to keep the image lean
+# NOTE: gettext is NOT in this list because cosmic-settings depends on it at runtime.
+# Removing it cascade-removes COSMIC packages and causes a login loop.
 GHOSTTY_BUILD_DEPS=(
     gtk4-devel
     gtk4-layer-shell-devel
     libadwaita-devel
-    gettext
     pkg-config
 )
-dnf5 install -y "${GHOSTTY_BUILD_DEPS[@]}"
+# gettext is needed for build but also a runtime dep of cosmic-settings — install
+# it separately so it's not in the removal list
+dnf5 install -y "${GHOSTTY_BUILD_DEPS[@]}" gettext
 
 # Fetch Zig compiler (static binary, no install needed)
 curl -fsSL "https://ziglang.org/download/${ZIG_VERSION}/zig-x86_64-linux-${ZIG_VERSION}.tar.xz" \
@@ -88,8 +91,11 @@ cd /
 # Clean up build artifacts and Zig compiler
 rm -rf /tmp/zig-* /tmp/ghostty-*
 
-# Remove -devel packages (headers/pkgconfig only — runtime libs stay via COSMIC deps)
-dnf5 remove -y "${GHOSTTY_BUILD_DEPS[@]}" --noautoremove
+# Remove -devel packages and their transitive -devel deps (headers/pkgconfig only).
+# Runtime libs (gtk4, libadwaita, etc.) are kept because COSMIC — installed above —
+# marks them as user-installed. This depends on COSMIC being installed BEFORE the
+# -devel packages so dnf tracks the runtime libs as explicit, not auto deps.
+dnf5 remove -y "${GHOSTTY_BUILD_DEPS[@]}"
 
 echo "Ghostty ${GHOSTTY_VERSION} built and installed"
 echo "::endgroup::"
