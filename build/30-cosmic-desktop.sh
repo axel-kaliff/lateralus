@@ -41,13 +41,12 @@ echo "::group:: Configure Display Manager"
 # Enable cosmic-greeter (COSMIC's display manager)
 systemctl enable cosmic-greeter
 
-# Ensure cosmic-greeter has GPU access for DRM master.
-# The cosmic-greeter sysusers.d ships `m cosmic-greeter video`, but on bootc
-# /etc/group persists across rebases — systemd-sysusers won't retroactively
-# add the membership if the user already exists. Without video+render group
-# access, cosmic-comp falls back to unprivileged mode (software rendering)
-# which is unstable and causes login hangs/crashes.
-usermod -aG video,render cosmic-greeter
+# Enable boot-time group membership service.
+# On bootc, /etc/group persists across rebases and the package's sysusers.d
+# "m cosmic-greeter video" directive doesn't apply when the video/render groups
+# live in /usr/lib/group rather than /etc/group. This service runs usermod at
+# boot before the greeter starts.
+systemctl enable lateralus-greeter-groups.service
 
 # COSMIC is Wayland-native — the cosmic-session package registers its own
 # session file. No X11 session file needed.

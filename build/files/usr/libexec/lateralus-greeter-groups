@@ -1,0 +1,34 @@
+#!/usr/bin/bash
+# Ensure cosmic-greeter user has video and render group memberships for DRM
+# master access. On bootc, /etc/group persists across rebases and the package's
+# systemd-sysusers "m cosmic-greeter video" directive doesn't apply when the
+# video/render groups live in /usr/lib/group (systemd static groups) rather
+# than /etc/group. usermod -aG fails silently in that case because it can't
+# find the group entry to modify in /etc/group. We must ensure the group
+# entries exist in /etc/group first.
+
+set -euo pipefail
+
+if ! id cosmic-greeter &>/dev/null; then
+    echo "cosmic-greeter user not found, skipping"
+    exit 0
+fi
+
+# Ensure each group exists in /etc/group before adding membership.
+# On bootc, static groups in /usr/lib/group resolve via NSS but usermod
+# needs a writable entry in /etc/group to add members.
+for grp in video render; do
+    if ! grep -q "^${grp}:" /etc/group; then
+        gid="$(getent group "${grp}" | cut -d: -f3)"
+        if [ -n "${gid}" ]; then
+            echo "${grp}:x:${gid}:" >> /etc/group
+            echo "Created ${grp} (gid ${gid}) in /etc/group"
+        else
+            echo "Group ${grp} not found in NSS, skipping"
+            continue
+        fi
+    fi
+done
+
+usermod -aG video,render cosmic-greeter
+echo "cosmic-greeter groups: $(id cosmic-greeter)"

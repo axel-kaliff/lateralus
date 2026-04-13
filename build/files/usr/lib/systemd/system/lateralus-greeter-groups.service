@@ -1,0 +1,14 @@
+[Unit]
+Description=Ensure cosmic-greeter has GPU group memberships
+Before=cosmic-greeter.service display-manager.service
+After=local-fs.target systemd-sysusers.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/libexec/lateralus-greeter-groups
+RemainAfterExit=yes
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=graphical.target

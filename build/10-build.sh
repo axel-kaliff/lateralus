@@ -80,6 +80,8 @@ install -Dm644 /ctx/build/files/usr/lib/tmpfiles.d/lateralus-homebrew.conf /usr/
 install -Dm644 /ctx/build/files/usr/lib/sysusers.d/lateralus-homebrew.conf /usr/lib/sysusers.d/lateralus-homebrew.conf
 install -Dm644 /ctx/build/files/usr/lib/systemd/system/lateralus-auto-upgrade.service /usr/lib/systemd/system/lateralus-auto-upgrade.service
 install -Dm644 /ctx/build/files/usr/lib/systemd/system/lateralus-auto-upgrade.timer /usr/lib/systemd/system/lateralus-auto-upgrade.timer
+install -Dm755 /ctx/build/files/usr/libexec/lateralus-greeter-groups /usr/libexec/lateralus-greeter-groups
+install -Dm644 /ctx/build/files/usr/lib/systemd/system/lateralus-greeter-groups.service /usr/lib/systemd/system/lateralus-greeter-groups.service
 
 echo "::endgroup::"
 
