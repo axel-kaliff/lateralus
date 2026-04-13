@@ -1,6 +1,5 @@
 [Unit]
 Description=Install Lateralus GRUB theme
-ConditionPathExists=!/boot/grub2/themes/lateralus/theme.txt
 After=local-fs.target
 
 [Service]

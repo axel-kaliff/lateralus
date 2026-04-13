@@ -1,27 +1,51 @@
 #!/usr/bin/bash
-# Install Lateralus GRUB theme to /boot on first boot
+# Install Lateralus GRUB theme to /boot after rebase
 # /boot is a separate partition not available during container build
+# Version-aware: re-applies when the image changes (e.g. theme redesign)
 set -eou pipefail
 
 THEME_SRC="/usr/share/lateralus/grub-theme"
 THEME_DST="/boot/grub2/themes/lateralus"
+STAMP="/var/lib/lateralus/grub-setup-done"
 
 if [ ! -d "$THEME_SRC" ]; then
     echo "GRUB theme source not found at ${THEME_SRC}, skipping."
     exit 0
 fi
 
-echo "Installing Lateralus GRUB theme..."
+# Get the current image version to detect rebases/upgrades
+if [ -f /etc/os-release ]; then
+    . /etc/os-release
+    IMAGE_VERSION="${OSTREE_VERSION:-${VERSION_ID:-unknown}}"
+else
+    IMAGE_VERSION="unknown"
+fi
+IMAGE_ID="lateralus-${IMAGE_VERSION}"
+
+# Skip if this exact image version was already applied
+if [ -f "$STAMP" ] && [ "$(cat "$STAMP")" = "$IMAGE_ID" ]; then
+    echo "GRUB theme already installed for ${IMAGE_ID}, skipping."
+    exit 0
+fi
+
+echo "Installing Lateralus GRUB theme for ${IMAGE_ID}..."
 
 mkdir -p "${THEME_DST}"
 cp -a "${THEME_SRC}"/* "${THEME_DST}"/
 
 # Configure GRUB to use the theme via user.cfg
 # user.cfg is loaded by GRUB and is not subject to ostree 3-way merge
+# IMPORTANT: Only use 'set' assignments here — commands like 'terminal_output'
+# can abort grub.cfg parsing if they fail, preventing blscfg from loading
+# boot entries. GRUB applies gfxmode and theme automatically when set.
 cat > /boot/grub2/user.cfg << 'GRUBEOF'
-set theme=($root)/grub2/themes/lateralus/theme.txt
 set gfxmode=auto
-terminal_output gfxterm
+set gfxpayload=keep
+set theme=($root)/grub2/themes/lateralus/theme.txt
 GRUBEOF
+
+# Record which image version was set up
+mkdir -p "$(dirname "$STAMP")"
+echo "$IMAGE_ID" > "$STAMP"
 
 echo "GRUB theme installed."
