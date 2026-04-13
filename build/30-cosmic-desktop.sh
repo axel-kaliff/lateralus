@@ -60,7 +60,7 @@ echo "::group:: Build Ghostty Terminal from Source"
 # IMPORTANT: Update ZIG_VERSION when bumping Ghostty — check the compatibility
 # table at https://ghostty.org/docs/install/build
 # renovate: datasource=github-releases depName=ghostty-org/ghostty
-GHOSTTY_VERSION="1.3.0"
+GHOSTTY_VERSION="1.3.1"
 ZIG_VERSION="0.15.2"
 
 # Build-only deps — removed after install to keep the image lean
@@ -85,7 +85,10 @@ ZIG="/tmp/zig-x86_64-linux-${ZIG_VERSION}/zig"
 curl -fsSL "https://release.files.ghostty.org/${GHOSTTY_VERSION}/ghostty-${GHOSTTY_VERSION}.tar.gz" \
     | tar -xz -C /tmp
 cd "/tmp/ghostty-${GHOSTTY_VERSION}"
-XDG_CACHE_HOME=/tmp/.cache "${ZIG}" build -Doptimize=ReleaseFast -p /usr
+XDG_CACHE_HOME=/tmp/.cache "${ZIG}" build \
+    -Doptimize=ReleaseFast \
+    -Dversion-string="${GHOSTTY_VERSION}" \
+    -p /usr
 cd /
 
 # Clean up build artifacts and Zig compiler
