@@ -1,0 +1,57 @@
+name: Keepalive
+
+# GitHub auto-disables scheduled (cron) workflows after 60 days of repository
+# inactivity (no commits). This fork's builds and upstream sync depend on cron,
+# so this workflow keeps them alive:
+#   1. Re-enables any scheduled workflow that has already been disabled.
+#   2. If the last commit is approaching the 60-day threshold, pushes an empty
+#      commit to reset the inactivity clock — a scheduled run alone does NOT
+#      count as activity, only a commit does.
+
+on:
+  schedule:
+    - cron: "0 0 1,21 * *"  # day 1 and 21 each month (max gap ~11 days, well under 60)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  keepalive:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v5
+        with:
+          fetch-depth: 0
+
+      - name: Re-enable disabled scheduled workflows
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh api "repos/${GITHUB_REPOSITORY}/actions/workflows" \
+            --jq '.workflows[] | select(.state == "disabled_inactivity") | .id' \
+          | while read -r id; do
+              echo "Re-enabling workflow id ${id}"
+              gh api -X PUT "repos/${GITHUB_REPOSITORY}/actions/workflows/${id}/enable"
+            done
+
+      - name: Heartbeat commit if repo is going stale
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          last_commit_epoch=$(git log -1 --format=%ct)
+          now_epoch=$(date +%s)
+          age_days=$(( (now_epoch - last_commit_epoch) / 86400 ))
+          echo "Last commit is ${age_days} days old."
+
+          # Refresh well before the 60-day cutoff.
+          if [ "${age_days}" -ge 50 ]; then
+            echo "Pushing empty heartbeat commit to reset inactivity clock."
+            git commit --allow-empty -m "chore: keepalive heartbeat [skip ci]"
+            git push
+          else
+            echo "Repo is active enough; no heartbeat needed."
+          fi
