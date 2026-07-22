@@ -51,7 +51,7 @@ COPY --from=brew /system_files /oci/brew
 
 # Base Image - no desktop (COSMIC is installed by 30-cosmic-desktop.sh)
 # Renovate will keep the digest pin up to date.
-FROM ghcr.io/ublue-os/base-main:latest@sha256:040282f76320a975195c399afcf37fd21bc8f5263980cef17d34ce8e4b5865a0
+FROM ghcr.io/ublue-os/base-main:latest@sha256:edad39393536c81c674cd910fd502c0ffad8b60e3df056a1f0841f3fdfb8fa62
 
 # Image identity - these define how bootc, fastfetch, and the ublue ecosystem
 # recognize your image. Change these to match your project name.
