@@ -177,6 +177,7 @@ build $target_image=IMAGE_NAME $tag=DEFAULT_TAG:
         .
 
 # Tag images with the generated alias tags
+
 # Bluefin pattern: separate tagging from pushing
 [group('Image')]
 tag-images $image_name="" $default_tag="" $tags="":

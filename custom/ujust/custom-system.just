@@ -49,7 +49,6 @@ configure-dev-groups:
 
     echo "Groups configured. Log out and back in for changes to take effect."
 
-
 # Clean up container images and volumes
 [group('Maintenance')]
 clean-containers:

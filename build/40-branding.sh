@@ -19,7 +19,7 @@ plymouth-set-default-theme lateralus
 
 # Regenerate initramfs so the plymouth theme is baked in
 # On bootc, the initramfs must be built during container image build
-QUALIFIED_KERNEL="$(ls /lib/modules/ | sort -V | tail -n 1)"
+QUALIFIED_KERNEL="$(find /lib/modules -mindepth 1 -maxdepth 1 -printf '%f\n' | sort -V | tail -n 1)"
 /usr/bin/dracut \
     --no-hostonly \
     --kver "${QUALIFIED_KERNEL}" \
