@@ -34,11 +34,21 @@ jobs:
             else
               echo "Already up to date."
             fi
-          else
-            git merge --abort
-            echo "Merge conflict detected — creating issue for manual resolution."
+            exit 0
+          fi
+
+          git merge --abort
+          echo "::error::Merge conflict syncing from projectbluefin/finpilot — resolve manually."
+
+          # Open a tracking issue unless one is already open. Issue creation is
+          # best-effort (repo may have issues disabled); the run still fails so
+          # the conflict is visible either way.
+          existing=$(gh issue list --state open --search "Upstream sync failed in:title" \
+            --json number --jq 'length' 2>/dev/null || echo 0)
+          if [ "${existing}" = "0" ]; then
             gh issue create \
               --title "Upstream sync failed: merge conflict" \
-              --body "Automatic merge from \`projectbluefin/finpilot\` main failed due to conflicts. Please resolve manually." \
-              --label "upstream-sync" || true
+              --body "Automatic merge from \`projectbluefin/finpilot\` main failed due to conflicts. Resolve locally: \`git fetch upstream && git merge upstream/main\`, fix conflicts, push to main." \
+              || echo "Could not create issue (issues may be disabled)."
           fi
+          exit 1
