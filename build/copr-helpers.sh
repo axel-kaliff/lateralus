@@ -9,18 +9,18 @@ set -euo pipefail
 ###############################################################################
 
 copr_install_isolated() {
-    local copr_name="$1"
-    shift
-    local packages=("$@")
+	local copr_name="$1"
+	shift
+	local packages=("$@")
 
-    if [[ ${#packages[@]} -eq 0 ]]; then
-        echo "ERROR: No packages specified for copr_install_isolated"
-        return 1
-    fi
+	if [[ ${#packages[@]} -eq 0 ]]; then
+		echo "ERROR: No packages specified for copr_install_isolated"
+		return 1
+	fi
 
-    repo_id="copr:copr.fedorainfracloud.org:${copr_name//\//:}"
+	repo_id="copr:copr.fedorainfracloud.org:${copr_name//\//:}"
 
-    echo "Installing ${packages[*]} from COPR $copr_name (isolated)"
+	echo "Installing ${packages[*]} from COPR $copr_name (isolated)"
 
     # Ensure repo files are cleaned up even if install fails
     cleanup_copr() {

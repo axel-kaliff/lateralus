@@ -203,7 +203,7 @@ Use groups to categorize commands:
 install-app:
     echo "Installing app..."
 
-[group('System')]  
+[group('System')]
 configure-system:
     echo "Configuring system..."
 
