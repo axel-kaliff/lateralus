@@ -85,8 +85,18 @@ ZIG="/tmp/zig-x86_64-linux-${ZIG_VERSION}/zig"
 curl -fsSL "https://release.files.ghostty.org/${GHOSTTY_VERSION}/ghostty-${GHOSTTY_VERSION}.tar.gz" \
     | tar -xz -C /tmp
 cd "/tmp/ghostty-${GHOSTTY_VERSION}"
+# -Dcpu=baseline is REQUIRED for an image shipped to other machines: Zig targets the
+# *build* host's native CPU by default, so the binary inherits whatever ISA extensions
+# the GitHub runner happened to have. Runner hardware varies (Intel Ice Lake Xeons carry
+# AVX-512, AMD EPYC does not), which makes the breakage intermittent across rebuilds —
+# a build that lands on an AVX-512 runner SIGILLs on first launch on any consumer CPU
+# without it (e.g. Whiskey Lake i5-8265U faults on a vptestnmb in a vectorized string
+# routine). Ghostty's SIMD hot paths dispatch at runtime via Google Highway, so baseline
+# costs no meaningful performance.
+# Upstream guidance: https://github.com/ghostty-org/ghostty/blob/main/PACKAGING.md
 XDG_CACHE_HOME=/tmp/.cache "${ZIG}" build \
     -Doptimize=ReleaseFast \
+    -Dcpu=baseline \
     -Dversion-string="${GHOSTTY_VERSION}" \
     -p /usr
 cd /
