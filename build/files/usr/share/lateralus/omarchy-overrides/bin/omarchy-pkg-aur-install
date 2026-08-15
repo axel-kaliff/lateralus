@@ -1,0 +1,6 @@
+#!/bin/bash
+# lateralus override — there is no AUR on Fedora/bootc.
+
+# omarchy:summary=No AUR on lateralus — use brew or flatpak
+
+exec omarchy-pkg-install

@@ -7,5 +7,7 @@ Documentation=man:bootc-upgrade(8)
 [Service]
 Type=oneshot
 ExecStart=/usr/bin/bootc upgrade
+# Refresh the staged-update flag the Omarchy bar's update badge reads
+ExecStartPost=/usr/libexec/lateralus-update-flag
 StandardOutput=journal
 StandardError=journal

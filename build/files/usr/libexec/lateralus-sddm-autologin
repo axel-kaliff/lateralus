@@ -1,0 +1,44 @@
+#!/usr/bin/bash
+# Manage SDDM autologin for the Omarchy session (seamless login).
+#
+#   lateralus-sddm-autologin enable <user>   write /etc/sddm.conf.d/autologin.conf
+#   lateralus-sddm-autologin disable         remove it
+#
+# Same drop-in Omarchy v4's installer writes; /etc is the right place here —
+# it holds a machine-local username, not vendor config.
+set -euo pipefail
+
+CONF=/etc/sddm.conf.d/autologin.conf
+
+session_file() {
+    # omedora-settings ships the session as omedora.desktop; fall back to the
+    # upstream name so this survives a payload rename.
+    local name
+    for name in omedora.desktop omarchy.desktop hyprland.desktop; do
+        if [ -f "/usr/share/wayland-sessions/${name}" ]; then
+            echo "$name"
+            return 0
+        fi
+    done
+    echo "ERROR: no Omarchy wayland session found in /usr/share/wayland-sessions" >&2
+    return 1
+}
+
+case "${1:-}" in
+enable)
+    user="${2:?Usage: lateralus-sddm-autologin enable <user>}"
+    id -u "$user" > /dev/null
+    session="$(session_file)"
+    mkdir -p /etc/sddm.conf.d
+    printf '[Autologin]\nUser=%s\nSession=%s\n' "$user" "$session" > "$CONF"
+    echo "SDDM autologin enabled for ${user} (session: ${session})"
+    ;;
+disable)
+    rm -f "$CONF"
+    echo "SDDM autologin disabled"
+    ;;
+*)
+    echo "Usage: lateralus-sddm-autologin enable <user> | disable" >&2
+    exit 1
+    ;;
+esac

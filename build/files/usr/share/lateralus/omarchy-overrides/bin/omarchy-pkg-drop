@@ -1,0 +1,20 @@
+#!/bin/bash
+# lateralus override — RPMs can't be removed from a running bootc image.
+# Succeeds when nothing needs removing (the common payload call pattern),
+# otherwise explains where the package actually lives.
+
+# omarchy:summary=No-op on lateralus for absent packages; image RPMs are removed by rebuilding
+# omarchy:args=<packages...>
+
+installed=()
+for pkg in "$@"; do
+  rpm -q "$pkg" &> /dev/null && installed+=("$pkg")
+done
+
+if ((${#installed[@]} == 0)); then
+  exit 0
+fi
+
+echo "Cannot remove from a running bootc image: ${installed[*]}" >&2
+echo "Remove them from build/35-omarchy-desktop.sh and rebuild the image." >&2
+exit 1

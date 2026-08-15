@@ -1,0 +1,39 @@
+#!/bin/bash
+# lateralus override — on bootc, image updates (kernel included) apply on
+# reboot; the pacman kernel-file checks are replaced by the staged-deployment
+# flag. Service/shell restart handling is kept from upstream.
+
+# omarchy:summary=Prompt for required reboot or service restarts after updates
+
+echo
+
+confirm_reboot() {
+  gum confirm "$1" && {
+    omarchy-system-reboot
+    exit 0
+  }
+}
+
+if [[ -e /run/lateralus/update-staged ]]; then
+  confirm_reboot "Updated OS image staged. Reboot into it now?"
+elif [[ -f $HOME/.local/state/omarchy/reboot-required ]]; then
+  confirm_reboot "Updates require reboot. Ready?"
+fi
+
+for file in "$HOME"/.local/state/omarchy/restart-*-required; do
+  if [[ -f $file ]]; then
+    filename=$(basename "$file")
+    service="${filename#restart-}"
+    service="${service%-required}"
+    echo "Restarting $service"
+    omarchy-state clear "$filename"
+    omarchy-restart-"$service"
+  fi
+done
+
+# Updates routinely replace the shell's QML, and a stale process can lazy-load
+# new files into old code. A restart failure only prints its reason: the next
+# update or login gets a fresh shell anyway.
+echo -e "\e[32m\nRestarting shell\e[0m"
+echo "All plugins have been reloaded"
+omarchy-restart-shell || true

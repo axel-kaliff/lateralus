@@ -1,0 +1,46 @@
+#!/usr/bin/bash
+# Conditionally enable SDDM autologin at boot — Omarchy v4's own policy:
+# permanent autologin is only granted when full-disk encryption makes the
+# LUKS passphrase the auth boundary. Silently removing the login gate on a
+# multi-user or unencrypted machine would be a security regression a rebase
+# must never cause, so this enables autologin only when ALL hold:
+#
+#   1. exactly one human user exists
+#   2. the root filesystem sits on a LUKS-encrypted device
+#   3. SDDM is the enabled display manager
+#
+# Unit-level guards (lateralus-omarchy-autologin.service): never runs if
+# /etc/sddm.conf.d/autologin.conf already exists (user/ujust decision wins)
+# or if /etc/lateralus/no-autologin opts out (ujust omarchy-autologin-off).
+set -euo pipefail
+
+human_users=()
+while IFS=: read -r user _ uid _ _ home _; do
+    [ "$uid" -lt 1000 ] 2>/dev/null && continue
+    [ "$uid" -ge 65000 ] 2>/dev/null && continue
+    [ ! -d "$home" ] && continue
+    [ "$user" = "linuxbrew" ] && continue
+    human_users+=("$user")
+done < /etc/passwd
+
+if [ "${#human_users[@]}" -ne 1 ]; then
+    echo "Found ${#human_users[@]} human users — autologin needs exactly 1, skipping."
+    exit 0
+fi
+
+# Root device LUKS check: resolve the source of /sysroot (ostree) or /,
+# strip any btrfs subvolume suffix, and walk the device ancestry for 'crypt'.
+root_src="$(findmnt -no SOURCE /sysroot 2> /dev/null || findmnt -no SOURCE /)"
+root_src="${root_src%%\[*}"
+if ! lsblk -rsno TYPE "$root_src" 2> /dev/null | grep -qx crypt; then
+    echo "Root device ${root_src} is not LUKS-encrypted — keeping the SDDM greeter."
+    exit 0
+fi
+
+dm_target="$(readlink -f /etc/systemd/system/display-manager.service 2> /dev/null || true)"
+if [ "$(basename "$dm_target")" != "sddm.service" ]; then
+    echo "Display manager is not SDDM (${dm_target:-none}) — skipping autologin."
+    exit 0
+fi
+
+exec /usr/libexec/lateralus-sddm-autologin enable "${human_users[0]}"

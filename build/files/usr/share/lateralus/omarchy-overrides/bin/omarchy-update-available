@@ -1,0 +1,16 @@
+#!/bin/bash
+# lateralus override — the bar's update badge polls this (exit 0 = updates).
+# The staged-deployment flag is maintained by /usr/libexec/lateralus-update-flag
+# after the daily lateralus-auto-upgrade.timer run; /run clears on reboot.
+
+# omarchy:summary=Check whether a staged OS image update is waiting for a reboot.
+
+set -euo pipefail
+
+if [[ -e /run/lateralus/update-staged ]]; then
+  echo "Updated OS image staged — reboot to apply (or run: omarchy update)"
+  exit 0
+else
+  echo "Omarchy is up to date"
+  exit 1
+fi

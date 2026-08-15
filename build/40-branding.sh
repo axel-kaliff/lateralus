@@ -17,6 +17,10 @@ cp /ctx/build/files/usr/share/plymouth/themes/lateralus/* "${THEME_DIR}"/
 # Set as default plymouth theme
 plymouth-set-default-theme lateralus
 
+# The omarchy payload (script 35) ships its own Plymouth theme — assert the
+# lateralus splash is still what gets baked into the initramfs below.
+[[ "$(plymouth-set-default-theme)" == "lateralus" ]]
+
 # Regenerate initramfs so the plymouth theme is baked in
 # On bootc, the initramfs must be built during container image build
 QUALIFIED_KERNEL="$(find /lib/modules -mindepth 1 -maxdepth 1 -printf '%f\n' | sort -V | tail -n 1)"

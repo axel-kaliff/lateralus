@@ -1,0 +1,14 @@
+#!/usr/bin/bash
+# Maintain /run/lateralus/update-staged — the signal the Omarchy bar's update
+# badge reads (via the overridden omarchy-update-available). Runs after
+# lateralus-auto-upgrade.service stages a bootc deployment; /run clears on
+# reboot, which is exactly when the badge should clear.
+set -euo pipefail
+
+mkdir -p /run/lateralus
+
+if bootc status --format json 2> /dev/null | jq -e '.status.staged != null' > /dev/null; then
+    touch /run/lateralus/update-staged
+else
+    rm -f /run/lateralus/update-staged
+fi

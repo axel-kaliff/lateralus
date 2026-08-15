@@ -1,0 +1,16 @@
+#!/bin/bash
+# lateralus override — upstream is a pacman fzf picker; on lateralus new
+# software comes from brew (CLI) or Flathub (GUI).
+
+# omarchy:summary=Explain how to install new software on lateralus
+
+cat << EOF
+This is an immutable bootc image — new software doesn't come from the
+system package manager:
+
+  CLI tools:  brew search <term>   → brew install <name>
+  GUI apps:   flatpak search <term> → flatpak install <name>
+  Baked in:   add to the image (Brewfile / flatpak list / build scripts)
+              and rebuild — see ujust --list for shortcuts
+
+EOF

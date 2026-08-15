@@ -1,0 +1,114 @@
+#!/usr/bin/bash
+# Seed Omarchy per-user configs for EXISTING human users.
+#
+# /etc/skel (composed by the omedora-settings RPM + build/35-omarchy-desktop.sh)
+# only reaches users created after this image landed; this script replays it
+# for users that already exist — with strict no-clobber semantics:
+#
+#   - A path that already exists in $HOME is NEVER touched. This makes the
+#     user's own files (including stow symlinks from lateralus-user-setup —
+#     ghostty, lazygit, starship.toml, .bashrc, nvim, ...) win every collision.
+#     Plain cp -f onto a stow symlink would write THROUGH it into the user's
+#     dotfiles repo, so overwriting is never an option here.
+#   - Omarchy-only trees (hypr/, omarchy/, btop/, tmux/, autostart/, ...) land
+#     untouched by stow and seed cleanly.
+#   - Migration markers (~/.local/state/omarchy) seed on first provisioning
+#     only. On image updates they are left alone so omarchy-migrate runs any
+#     newly shipped migrations at next login.
+#
+# Runs as a system oneshot (lateralus-omarchy-setup.service) before the
+# display manager — pure file copies, deliberately independent of brew.
+# Re-runs when the image version changes (stamp), adding only NEW skel paths.
+set -eou pipefail
+
+# Image version stamp — same derivation as lateralus-user-setup
+if [ -f /etc/os-release ]; then
+    # shellcheck source=/dev/null
+    . /etc/os-release
+    IMAGE_VERSION="${OSTREE_VERSION:-${VERSION_ID:-unknown}}"
+else
+    IMAGE_VERSION="unknown"
+fi
+IMAGE_ID="lateralus-${IMAGE_VERSION}"
+
+FORCE=0
+ONLY_USER=""
+while [ $# -gt 0 ]; do
+    case "$1" in
+    --force) FORCE=1 ;;
+    --user)
+        shift
+        ONLY_USER="${1:?--user requires a name}"
+        ;;
+    *)
+        echo "Usage: lateralus-omarchy-user-setup [--force] [--user NAME]" >&2
+        exit 1
+        ;;
+    esac
+    shift
+done
+
+# Copy one skel-relative path into $HOME as the user, only if absent.
+seed_entry() {
+    local user="$1" home="$2" rel="$3"
+    local src="/etc/skel/${rel}"
+    local dest="${home}/${rel}"
+    { [ -e "$src" ] || [ -L "$src" ]; } || return 0
+    # Existing path (file, dir, or symlink) → the user's version wins.
+    { [ -e "$dest" ] || [ -L "$dest" ]; } && return 0
+    # Run as the user so everything created is owned correctly.
+    runuser -u "$user" -- mkdir -p "$(dirname "$dest")"
+    runuser -u "$user" -- cp -a "$src" "$dest"
+    echo "    seeded ${rel}"
+}
+
+setup_user() {
+    local user="$1" home="$2"
+    local state_dir="${home}/.local/state/omarchy"
+    local stamp="${state_dir}/.lateralus-omarchy-setup"
+
+    if [ "$FORCE" -eq 0 ] && [ -f "$stamp" ] && [ "$(cat "$stamp")" = "$IMAGE_ID" ]; then
+        echo "  User ${user}: omarchy configs current for ${IMAGE_ID}, skipping."
+        return
+    fi
+    echo "  Seeding omarchy configs for ${user} (${IMAGE_ID})..."
+
+    local entry rel
+    # Top-level skel entries; .config and .local get finer-grained treatment
+    # so existing directories merge instead of being skipped wholesale.
+    for entry in /etc/skel/.[!.]* /etc/skel/*; do
+        [ -e "$entry" ] || [ -L "$entry" ] || continue
+        rel="${entry#/etc/skel/}"
+        case "$rel" in
+        .config | .local) continue ;;
+        *) seed_entry "$user" "$home" "$rel" ;;
+        esac
+    done
+    for entry in /etc/skel/.config/* /etc/skel/.local/share/*; do
+        [ -e "$entry" ] || [ -L "$entry" ] || continue
+        seed_entry "$user" "$home" "${entry#/etc/skel/}"
+    done
+
+    # Migration markers: first provisioning only (see header). seed_entry's
+    # exists-check makes this a no-op on every later image update.
+    seed_entry "$user" "$home" ".local/state/omarchy/migrations"
+
+    runuser -u "$user" -- mkdir -p "$state_dir"
+    echo "$IMAGE_ID" > "$stamp"
+    chown "${user}:${user}" "$stamp"
+    echo "  User ${user}: omarchy config seeding complete."
+}
+
+echo "Lateralus omarchy user setup (image: ${IMAGE_ID})"
+
+while IFS=: read -r user _ uid _ _ home _; do
+    [ "$uid" -lt 1000 ] 2>/dev/null && continue
+    [ "$uid" -ge 65000 ] 2>/dev/null && continue
+    [ ! -d "$home" ] && continue
+    [ "$user" = "linuxbrew" ] && continue
+    [ -n "$ONLY_USER" ] && [ "$user" != "$ONLY_USER" ] && continue
+
+    setup_user "$user" "$home"
+done < /etc/passwd
+
+echo "All users processed."

@@ -1,18 +1,17 @@
 #!/usr/bin/bash
-# Ensure cosmic-greeter user has video and render group memberships for DRM
-# master access. On bootc, /etc/group persists across rebases and the package's
-# systemd-sysusers "m cosmic-greeter video" directive doesn't apply when the
-# video/render groups live in /usr/lib/group (systemd static groups) rather
-# than /etc/group. usermod -aG fails silently in that case because it can't
-# find the group entry to modify in /etc/group. We must ensure the group
-# entries exist in /etc/group first.
+# Ensure greeter users (cosmic-greeter, sddm) have video and render group
+# memberships for DRM master access. On bootc, /etc/group persists across
+# rebases and a package's systemd-sysusers "m <user> video" directive doesn't
+# apply when the video/render groups live in /usr/lib/group (systemd static
+# groups) rather than /etc/group. usermod -aG fails silently in that case
+# because it can't find the group entry to modify in /etc/group. We must
+# ensure the group entries exist in /etc/group first.
+#
+# sddm's greeter normally gets DRM access via PAM/logind, but its session is
+# Hyprland here (see build/35-omarchy-desktop.sh) — cheap insurance to run it
+# through the same fix as cosmic-greeter.
 
 set -euo pipefail
-
-if ! id cosmic-greeter &>/dev/null; then
-    echo "cosmic-greeter user not found, skipping"
-    exit 0
-fi
 
 # Ensure each group exists in /etc/group before adding membership.
 # On bootc, static groups in /usr/lib/group resolve via NSS but usermod
@@ -30,5 +29,11 @@ for grp in video render; do
     fi
 done
 
-usermod -aG video,render cosmic-greeter
-echo "cosmic-greeter groups: $(id cosmic-greeter)"
+for greeter in cosmic-greeter sddm; do
+    if ! id "${greeter}" &> /dev/null; then
+        echo "${greeter} user not found, skipping"
+        continue
+    fi
+    usermod -aG video,render "${greeter}"
+    echo "${greeter} groups: $(id "${greeter}")"
+done

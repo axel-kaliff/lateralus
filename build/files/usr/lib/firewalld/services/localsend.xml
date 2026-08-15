@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<service>
+  <short>LocalSend</short>
+  <description>LocalSend cross-platform local file sharing (https://localsend.org). Omarchy ships LocalSend; lateralus uses firewalld instead of ufw, so this service definition replaces Omarchy's ufw rule. Enable with: firewall-cmd --permanent --add-service=localsend</description>
+  <port protocol="tcp" port="53317"/>
+  <port protocol="udp" port="53317"/>
+</service>

@@ -1,0 +1,18 @@
+[Unit]
+Description=Enable SDDM autologin on single-user LUKS systems (Omarchy seamless login)
+After=lateralus-omarchy-setup.service
+Before=display-manager.service
+# An existing autologin.conf (user/ujust decision) always wins; the opt-out
+# marker is written by `ujust omarchy-autologin-off`.
+ConditionPathExists=!/etc/sddm.conf.d/autologin.conf
+ConditionPathExists=!/etc/lateralus/no-autologin
+
+[Service]
+Type=oneshot
+ExecStart=/usr/libexec/lateralus-omarchy-autologin
+RemainAfterExit=yes
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=graphical.target

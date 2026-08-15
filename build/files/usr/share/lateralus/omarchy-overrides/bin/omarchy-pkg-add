@@ -1,0 +1,23 @@
+#!/bin/bash
+# lateralus override — the OS image is immutable at runtime; RPMs can't be
+# layered ad hoc. Succeeds silently when everything asked for is already in
+# the image (this keeps payload callers like omarchy-install-terminal working
+# for preinstalled packages), otherwise points at the lateralus channels.
+
+# omarchy:summary=Check for packages in the image; new software installs via brew/flatpak
+# omarchy:args=<packages...>
+
+if ! omarchy-pkg-missing "$@"; then
+  exit 0 # everything already in the image
+fi
+
+cat >&2 << EOF
+This is an immutable bootc image — packages can't be installed at runtime.
+
+  CLI tools:  brew install <name>       (or add to the image Brewfile)
+  GUI apps:   flatpak install <name>    (or add to the image flatpak list)
+  System:     add to build/35-omarchy-desktop.sh and rebuild the image
+
+Requested and not present: $(for p in "$@"; do rpm -q "$p" &> /dev/null || printf '%s ' "$p"; done)
+EOF
+exit 1
