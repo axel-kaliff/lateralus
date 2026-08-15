@@ -39,6 +39,9 @@ echo "::endgroup::"
 echo "::group:: Configure Display Manager"
 
 # Enable cosmic-greeter (COSMIC's display manager)
+# NOTE: intentionally overridden by build/35-omarchy-desktop.sh, which makes
+# SDDM the default display manager (Omarchy v4 login flow). COSMIC stays a
+# selectable session; switch greeters at runtime with `ujust omarchy-greeter`.
 systemctl enable cosmic-greeter
 
 # Enable boot-time group membership service.
@@ -138,6 +141,9 @@ echo "::endgroup::"
 echo "::group:: Set Ghostty as Default Terminal"
 
 # Set Ghostty as default terminal via xdg-terminals.list
+# NOTE: build/35-omarchy-desktop.sh overwrites this list afterwards with the
+# proper desktop-file IDs (Ghostty still first) — this write is a fallback in
+# case the Omarchy layer is ever removed.
 cat > /usr/share/xdg-terminals.list << 'TERMEOF'
 ghostty
 cosmic-term

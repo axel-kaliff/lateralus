@@ -1,0 +1,8 @@
+#!/bin/bash
+# lateralus override — pacman-specific step with no bootc equivalent; kept as
+# a no-op so any caller in the payload succeeds harmlessly.
+
+# omarchy:summary=No-op on lateralus (pacman-specific; system packages ride the bootc image)
+# omarchy:hidden=true
+
+exit 0

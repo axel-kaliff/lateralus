@@ -1,0 +1,130 @@
+#!/bin/bash
+# lateralus override of upstream omarchy-provision-user. Changes:
+#   - install/user scripts are invoked individually with existence guards
+#     instead of sourcing all.sh, dropping mise.sh + mise-work.sh (13 AI-CLI
+#     network installs — brew is the CLI channel on lateralus)
+#   - default browser is only set when none is configured (don't steal the
+#     default from existing users, e.g. Zen)
+#   - no HEY mailto handler hijack
+# Everything else (skills symlinks, xdg dirs, bookmarks, theme seed, keyring,
+# chromium native hosts, hardware fixes, migration markers) is upstream logic.
+
+# omarchy:summary=Finalize Omarchy user setup (runtime tweaks /etc/skel can't do)
+# omarchy:hidden=true
+
+set -euo pipefail
+
+usage() {
+  cat << USAGE
+Usage: omarchy finalize user [--force] [--first-install]
+
+Runs the per-user setup steps that /etc/skel can't seed. Idempotency marker:
+~/.local/state/omarchy/done/finalize-user
+USAGE
+}
+
+if ((EUID == 0)); then
+  echo "Error: run omarchy-provision-user as the user being configured, not as root." >&2
+  exit 1
+fi
+
+force=0
+first_install=0
+while (($#)); do
+  case "$1" in
+    --force)
+      force=1
+      shift
+      ;;
+    --first-install)
+      first_install=1
+      force=1
+      shift
+      ;;
+    -h | --help)
+      usage
+      exit 0
+      ;;
+    *)
+      echo "Unknown option: $1" >&2
+      usage >&2
+      exit 1
+      ;;
+  esac
+done
+
+state_dir="$HOME/.local/state/omarchy"
+mkdir -p "$state_dir"
+
+if omarchy-done check finalize-user && ((force == 0)); then
+  echo "User finalization already complete (rerun with --force to refresh)."
+  exit 0
+fi
+
+export OMARCHY_PATH="${OMARCHY_PATH:-/usr/share/omarchy}"
+export OMARCHY_INSTALL="${OMARCHY_INSTALL:-$OMARCHY_PATH/install}"
+export OMARCHY_SETUP_CONTEXT="${OMARCHY_SETUP_CONTEXT:-runtime}"
+export PATH="$OMARCHY_PATH/bin:$PATH"
+
+run_logged() {
+  local script="$1"
+  bash -eE -c 'source "$1"' bash "$script"
+}
+
+# Dev-aware skill symlinks (loops every skill directory, so shipping a new one
+# needs no edit here).
+mkdir -p ~/.agents/skills ~/.claude/skills ~/.codex/skills ~/.pi/agent/skills
+for skill in "$OMARCHY_PATH"/default/agents/skills/*/; do
+  skill=${skill%/}
+  name=${skill##*/}
+  ln -sfn "$skill" ~/.agents/skills/"$name"
+  ln -sfn "$skill" ~/.claude/skills/"$name"
+  ln -sfn "$skill" ~/.codex/skills/"$name"
+  ln -sfn "$skill" ~/.pi/agent/skills/"$name"
+done
+
+mkdir -p ~/Downloads ~/Pictures ~/Videos ~/.config/gtk-3.0
+xdg-user-dirs-update --set TEMPLATES "$HOME"
+xdg-user-dirs-update --set PUBLICSHARE "$HOME"
+xdg-user-dirs-update --set DESKTOP "$HOME"
+rmdir ~/Templates ~/Public ~/Desktop 2> /dev/null || true
+touch ~/.config/gtk-3.0/bookmarks
+for dir in Downloads Projects Pictures Videos; do
+  bookmark="file://$HOME/$dir $dir"
+  grep -qxF "$bookmark" ~/.config/gtk-3.0/bookmarks || echo "$bookmark" >> ~/.config/gtk-3.0/bookmarks
+done
+
+# install/user/all.sh minus mise.sh + mise-work.sh (see header). Guards keep
+# this robust against payload layout changes.
+for user_script in \
+  theme.sh \
+  chromium.sh \
+  git.sh \
+  xcompose.sh \
+  hardware/asus/fix-audio-mixer.sh \
+  hardware/asus/fix-mic.sh \
+  hardware/framework/fix-f13-amd-audio-input.sh \
+  hardware/dell/xps13-text-scaling.sh \
+  hardware/fix-nouveau-cursor.sh \
+  default-keyring.sh; do
+  script="$OMARCHY_INSTALL/user/$user_script"
+  [[ -f $script ]] && run_logged "$script"
+done
+
+omarchy-refresh-applications
+
+# Set chromium as default browser only when nothing is configured yet.
+current_browser=$(env -u BROWSER xdg-settings get default-web-browser 2> /dev/null || true)
+if [[ -z $current_browser ]]; then
+  env -u BROWSER xdg-settings set default-web-browser chromium.desktop || true
+fi
+
+if ((first_install)); then
+  mkdir -p "$state_dir/migrations"
+  for migration in "$OMARCHY_PATH"/migrations/*.sh; do
+    [[ -f $migration ]] && touch "$state_dir/migrations/$(basename "$migration")"
+  done
+fi
+
+omarchy-done mark finalize-user
+echo "User finalization complete."

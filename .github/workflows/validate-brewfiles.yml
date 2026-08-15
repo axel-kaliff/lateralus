@@ -21,14 +21,33 @@ jobs:
         run: |
           echo "Validating Brewfiles in custom/brew/ directory..."
 
-          find "custom/brew" -iname '*\.Brewfile*' -print0 | \
-            while IFS= read -r -d '' brewfile ; do
-              echo "::group:: ===$(basename "$brewfile")==="
-              if brew bundle check --file="$brewfile" 2>&1; then
-                echo "✓ $brewfile is valid"
-              else
-                echo "✗ $brewfile validation failed"
-                exit 1
-              fi
-              echo "::endgroup::"
-            done
+          # 'brew bundle check' tests what is installed on the runner (always
+          # nothing in CI); instead parse each Brewfile and resolve every
+          # formula name against the Homebrew API. Comment-only template
+          # files (development, fonts) are valid.
+          validate() {
+            local brewfile=$1 listing
+            if ! listing=$(brew bundle list --file="$brewfile" --formula 2>&1); then
+              echo "✗ $brewfile failed to parse:"
+              echo "$listing"
+              return 1
+            fi
+            mapfile -t formulae <<< "$listing"
+            if [[ -z "${formulae[0]}" ]]; then
+              echo "✓ $brewfile is valid (no active entries)"
+              return 0
+            fi
+            if ! brew info --formula "${formulae[@]}" > /dev/null; then
+              echo "✗ $brewfile references unknown formulae"
+              return 1
+            fi
+            echo "✓ $brewfile is valid (${#formulae[@]} formulae)"
+          }
+
+          status=0
+          while IFS= read -r -d '' brewfile ; do
+            echo "::group:: ===$(basename "$brewfile")==="
+            validate "$brewfile" || status=1
+            echo "::endgroup::"
+          done < <(find "custom/brew" -iname '*\.Brewfile*' -print0)
+          exit "$status"

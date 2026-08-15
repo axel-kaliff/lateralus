@@ -1,0 +1,22 @@
+#!/bin/bash
+# lateralus override — pacman query replaced with the payload version file /
+# rpm database.
+
+# omarchy:summary=Print the installed Omarchy version
+
+omarchy_path=${OMARCHY_PATH:-/usr/share/omarchy}
+omarchy_path=${omarchy_path%/}
+
+if [[ -f "$omarchy_path/version" ]]; then
+  cat "$omarchy_path/version"
+  exit 0
+fi
+
+for package in omedora omarchy; do
+  if version=$(rpm -q --qf '%{VERSION}' "$package" 2> /dev/null); then
+    echo "$version"
+    exit 0
+  fi
+done
+
+exit 1

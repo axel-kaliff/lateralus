@@ -1,0 +1,39 @@
+#!/bin/bash
+# lateralus override — SAFETY-CRITICAL rewrite. Upstream does a plain
+# `cp -af /etc/skel/. ~/`, which on lateralus would write THROUGH the stow
+# symlinks that lateralus-user-setup manages (ghostty, lazygit, starship.toml,
+# .bashrc, nvim, ...) — corrupting the user's dotfiles repo. This version
+# replaces symlinks instead of following them, warns first, and skips the
+# Arch-only limine/plymouth refresh steps.
+
+# omarchy:summary=Reset Omarchy user configs and shipped defaults in $HOME (destructive)
+
+set -euo pipefail
+
+if ((EUID == 0)); then
+  echo "Error: This script should not be run as root"
+  exit 1
+fi
+
+cat << EOF
+This resets every package-shipped user default from /etc/skel over \$HOME:
+.bashrc, .config/**, .local/share/applications, migration markers, ...
+
+WARNING: stow-managed dotfile symlinks in the way are REPLACED by the shipped
+defaults (your dotfiles repo itself is not touched). Re-link yours afterwards
+with: ujust setup
+EOF
+
+gum confirm "Reset Omarchy configs to shipped defaults?" || exit 0
+
+# --remove-destination unlinks symlinks before copying, so nothing is ever
+# written through a stow link into the user's dotfiles repo.
+cp -af --remove-destination /etc/skel/. ~/
+
+if command -v omarchy-nvim-refresh &> /dev/null; then
+  omarchy-nvim-refresh
+elif command -v omarchy-nvim-setup &> /dev/null; then
+  omarchy-nvim-setup --force
+fi
+
+echo "Done. Restore your own dotfile links with: ujust setup"

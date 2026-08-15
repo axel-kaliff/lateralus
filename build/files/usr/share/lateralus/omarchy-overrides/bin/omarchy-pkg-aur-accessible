@@ -1,0 +1,8 @@
+#!/bin/bash
+# lateralus override — there is no AUR on Fedora/bootc; callers that check
+# accessibility before offering AUR paths skip them gracefully on exit 1.
+
+# omarchy:summary=Always false on lateralus (no AUR)
+# omarchy:hidden=true
+
+exit 1

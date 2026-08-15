@@ -1,0 +1,44 @@
+#!/bin/bash
+# lateralus override — replaces the pacman/snapper update pipeline with the
+# cloud-native one: brew (CLI) → flatpak (GUI) → bootc (image). Installed over
+# the RPM's binary at image build (see build/35-omarchy-desktop.sh).
+
+# omarchy:summary=Update Omarchy: brew + flatpak now, the OS image staged for next boot
+# omarchy:args=[-y]
+# omarchy:examples=omarchy update | omarchy update -y
+# omarchy:requires-sudo=true
+
+set -e
+
+trap 'echo ""; echo -e "\033[0;31mSomething went wrong during the update!\n\nPlease review the output above, correct the error, and retry.\033[0m"' ERR
+
+unattended=0
+[[ ${1:-} == "-y" ]] && unattended=1
+
+if ((!unattended)); then
+  gum confirm "Update lateralus? (brew + flatpak apply now, the OS image stages for next boot)" || exit 0
+fi
+
+if command -v brew > /dev/null 2>&1; then
+  echo -e "\e[32m\nUpdating brew packages...\e[0m"
+  brew update && brew upgrade
+else
+  echo "brew not installed yet (first-boot setup may still be running) — skipping."
+fi
+
+echo -e "\e[32m\nUpdating flatpaks...\e[0m"
+flatpak update -y
+
+echo -e "\e[32m\nStaging OS image update (bootc)...\e[0m"
+sudo bootc upgrade
+sudo /usr/libexec/lateralus-update-flag
+
+# User-level migrations + hooks still apply (they run against the payload in
+# the booted image; newly shipped migrations run again at next login).
+command -v omarchy-migrate > /dev/null 2>&1 && omarchy-migrate
+command -v omarchy-hook > /dev/null 2>&1 && omarchy-hook post-update
+if command -v mise > /dev/null 2>&1 && command -v omarchy-update-mise > /dev/null 2>&1; then
+  omarchy-update-mise
+fi
+
+omarchy-update-restart

@@ -9,6 +9,10 @@ Scripts are named with a number prefix (e.g., `10-build.sh`, `20-onepassword.sh`
 ## Included Scripts
 
 - **`10-build.sh`** - Main build script for base system modifications, package installation, and service configuration
+- **`20-dotfiles.sh`** - Nerd Fonts and the lateralus dotfiles snapshot (stowed per-user at first boot)
+- **`30-cosmic-desktop.sh`** - COSMIC desktop, cosmic-greeter, and the source-built Ghostty terminal
+- **`35-omarchy-desktop.sh`** - Omarchy v4 desktop (Hyprland + Quickshell) via the omedora RPMs; makes SDDM the default display manager
+- **`40-branding.sh`** - Plymouth boot splash, GRUB theme, and COSMIC wallpaper (runs last so the lateralus splash owns the initramfs)
 
 ## Example Scripts
 

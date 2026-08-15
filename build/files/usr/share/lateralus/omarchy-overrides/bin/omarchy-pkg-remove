@@ -1,0 +1,13 @@
+#!/bin/bash
+# lateralus override — upstream is a yay/pacman fzf picker.
+
+# omarchy:summary=Explain how to remove software on lateralus
+
+cat << EOF
+This is an immutable bootc image — remove software where it was installed:
+
+  brew-installed CLI:  brew uninstall <name>
+  Flatpak apps:        flatpak uninstall <name>
+  Image RPMs:          remove from the build scripts and rebuild the image
+
+EOF

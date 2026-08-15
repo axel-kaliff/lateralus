@@ -1,0 +1,13 @@
+#!/bin/bash
+# lateralus override — pacman -Q replaced with rpm -q.
+
+# omarchy:summary=Returns true if any of the named packages are missing from the system (or false if they're all there).
+# omarchy:args=<packages...>
+
+for pkg in "$@"; do
+  if ! rpm -q "$pkg" &> /dev/null; then
+    exit 0
+  fi
+done
+
+exit 1

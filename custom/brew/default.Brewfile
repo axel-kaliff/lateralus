@@ -7,11 +7,11 @@ brew "bat"
 brew "delta"
 brew "devcontainer"
 brew "direnv"
+brew "dua-cli"
 brew "dust"
 brew "dysk"
 brew "eza"
 brew "fd"
-brew "fzf"
 brew "gh"
 brew "glab"
 brew "go"
@@ -23,7 +23,6 @@ brew "node"
 brew "ripgrep"
 brew "ruff"
 brew "shellcheck"
-brew "starship"
 brew "tealdeer"
 brew "topgrade"
 brew "trash-cli"
@@ -61,13 +60,14 @@ brew "trippy"
 brew "doggo"
 
 # Modern CLI replacements
+# NOTE: jq, gum, fzf, starship are RPMs in the image (omarchy scripts and the
+# first-login shell need them before first-boot brew finishes) — keep them
+# out of this Brewfile so there is one source of truth.
 brew "sd"
 brew "procs"
 brew "xh"
-brew "jq"
 brew "jnv"
 brew "watchexec"
-brew "gum"
 brew "vhs"
 
 # Terminal productivity

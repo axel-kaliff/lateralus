@@ -1,0 +1,11 @@
+#!/bin/bash
+# lateralus override — system packages live in the bootc image; staging the
+# updated image IS the system-package update.
+
+# omarchy:summary=Stage the updated OS image for next boot (bootc upgrade)
+# omarchy:requires-sudo=true
+
+set -euo pipefail
+
+sudo bootc upgrade
+sudo /usr/libexec/lateralus-update-flag

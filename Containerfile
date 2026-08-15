@@ -59,7 +59,9 @@ ARG IMAGE_NAME="lateralus"
 ARG IMAGE_VENDOR="axel-kaliff"
 ARG UBLUE_IMAGE_TAG="stable"
 ARG BASE_IMAGE_NAME="base-main"
-ARG FEDORA_MAJOR_VERSION="43"
+# Keep in sync with the actual base image above (base-main:latest is F44);
+# the Justfile reads this ARG as the source of truth for the version string.
+ARG FEDORA_MAJOR_VERSION="44"
 ARG VERSION=""
 ARG IMAGE_PRETTY_NAME="Lateralus (Fedora Linux)"
 

@@ -1,0 +1,17 @@
+[Unit]
+Description=Seed Omarchy per-user configs for existing users
+# Pure file copies from /etc/skel — deliberately independent of
+# lateralus-brew-setup so the Omarchy session is complete before the first
+# login (lateralus-user-setup needs brew's stow and can't run pre-greeter).
+After=local-fs.target
+Before=display-manager.service lateralus-omarchy-autologin.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/libexec/lateralus-omarchy-user-setup
+RemainAfterExit=yes
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=graphical.target
