@@ -1,1 +1,1 @@
-../../.agents/skills/finpilot-pr-checklist.md
+../../.agents/skills/finpilot-pr-checklist/SKILL.md

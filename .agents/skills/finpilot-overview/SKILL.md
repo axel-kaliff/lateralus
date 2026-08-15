@@ -3,9 +3,7 @@ name: finpilot-overview
 description: >-
   Architecture, repo layout, and factory role for the finpilot template.
   Use when orienting to the repository, understanding how it relates to
-  projectbluefin/actions, or deciding which skill to read next.
-metadata:
-  context7-sources: []
+  projectbluefin/actions, or before picking a skill with finpilot-router.
 ---
 
 # finpilot Overview
@@ -14,19 +12,19 @@ metadata:
 
 - Starting a new session in this repo
 - Explaining how finpilot relates to bluefin/aurora/dakota
-- Deciding which `.agents/skills/` file covers your change area
+- Orienting before using `finpilot-router` to pick a skill
 - Onboarding a new contributor or agent
 
 ## When NOT to Use
 
-- You already know the area — go straight to the relevant skill file
-- You need specific build or CI mechanics — see `finpilot-build.md` or `finpilot-ci.md`
+- You already know the area — use the relevant skill directly
+- You need specific build or CI mechanics — use `finpilot-build` or `finpilot-ci`
 
 ## Core Process
 
-1. **Read AGENTS.md `## Start here`** to find the routing table
+1. **Read AGENTS.md `## Start here`** for repository-wide rules and the skill sequence
 2. **Identify your change area** (Containerfile/Justfile → build, workflows → ci, template init → templates)
-3. **Read the relevant skill file** before touching anything
+3. **Load the relevant skill** before touching anything
 4. **Verify against current patterns** in `projectbluefin/actions` before deviating
 
 ## Architecture
@@ -70,7 +68,7 @@ finpilot is a **bootc image template** following the Bluefin multi-stage build a
 │   ├── actions/
 │   │   └── check-token-health/  # PAT validation composite action
 │   └── renovate.json            # Renovate config (OCI digests, GH Actions)
-└── .agents/skills/        # This directory
+└── .agents/skills/        # Discoverable <skill-name>/SKILL.md directories
 ```
 
 ## Factory Role
@@ -81,27 +79,21 @@ pipeline repo itself, but it adopts the same composite workflow actions as bluef
 - CI uses `projectbluefin/actions/bootc-build/*` composite actions
 - Renovate config extends `config:best-practices` and tracks OCI digests
 - Image metadata (`image-info.json`) follows the ublue-os convention
+- The label-enforcement workflow maintains the shared seven-label lifecycle;
+  an issue creator's form opt-in admits their new issue to
+  `3-clanker-queue` for Hive-connected agents; maintainers may also set that
+  label explicitly
 
-## Task Router ("I need to…")
+## Task Router
 
-| I need to…                                       | Load this skill                           |
-| ------------------------------------------------ | ----------------------------------------- |
-| Bootstrap a new fork from this template          | `finpilot-onboarding.md`                  |
-| Add/remove a package or app                      | `finpilot-packages.md`                    |
-| Change Brewfiles, Flatpaks, or ujust             | `finpilot-custom.md`                      |
-| Change Containerfile, Justfile, or build scripts | `finpilot-build.md`                       |
-| Fix CI or Renovate                               | `finpilot-ci.md` / `finpilot-maintain.md` |
-| Open a PR                                        | `finpilot-pr-checklist.md`                |
-| Debug a build or deploy failure                  | `finpilot-troubleshooting.md`             |
-| Follow a worked example                          | `finpilot-examples.md`                    |
-| Orient to repo architecture                      | `finpilot-overview.md` (this file)        |
-| Initialize or rename this template               | `finpilot-templates.md`                   |
+The canonical task → skill routing table lives in the `finpilot-router` skill —
+load it when you don't know which skill covers a task.
 
 ## Scope Rules
 
 To keep changes minimal and safe:
 
-- **Doc tasks** (README, skills markdown) → No CI impact, free to edit
+- **Doc tasks** (README, Agent Skills) → No CI impact, free to edit
 - **CI tasks** (`.github/workflows/`, `renovate.json`) → Trigger `pr-validation.yml`, must pass `actionlint` and `renovate-config-validator`
 - **Build tasks** (`Containerfile`, `build/`, `Justfile`) → Trigger full build, must pass `hadolint` + `shellcheck`
 - **Runtime tasks** (`custom/`) → Trigger respective `validate-*.yml`
@@ -126,17 +118,17 @@ To keep changes minimal and safe:
 
 | Rationalization                                      | Reality                                                             |
 | ---------------------------------------------------- | ------------------------------------------------------------------- |
-| "AGENTS.md has everything — no need to read skills." | AGENTS.md is for Copilot UX. Skills are the agent operating manual. |
+| "AGENTS.md has everything — no need to use skills." | AGENTS.md holds global rules. Skills provide task-specific instructions. |
 | "It's just a template repo, not factory infra."      | It ships workflow patterns to every fork. Mistakes multiply.        |
 
 ## Red Flags
 
-- Making Containerfile changes without reading `finpilot-build.md`
+- Making Containerfile changes without using `finpilot-build`
 - Adding a workflow without verifying the `projectbluefin/actions` composite action exists
 - Updating pinned `@sha256:...` digests in `Containerfile` manually instead of letting Renovate do it
 
 ## Verification
 
-- [ ] Do I know which skill file covers my change area?
-- [ ] Have I read that skill file?
+- [ ] Do I know which skill covers my change area?
+- [ ] Have I loaded that skill?
 - [ ] Does the change match current `projectbluefin/actions` patterns?

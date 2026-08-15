@@ -1,1 +1,1 @@
-../../.agents/skills/finpilot-packages.md
+../../.agents/skills/finpilot-packages/SKILL.md

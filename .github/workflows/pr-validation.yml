@@ -4,6 +4,8 @@ on:
   pull_request:
     branches:
       - main
+      - stable
+  merge_group:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || github.run_id }}
@@ -20,7 +22,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Validate
-        uses: projectbluefin/actions/bootc-build/validate-pr@ae3c45762b7eebb188dbd4850d23042e96e539d8 # v1
+        uses: projectbluefin/actions/bootc-build/validate-pr@8906e13e3ac1654504e75ad27440bffb28e52fbc # v1
         with:
           shellcheck-glob: "build/*.sh"
           dockerfile: "Containerfile"

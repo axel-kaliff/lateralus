@@ -1,1 +1,1 @@
-../../.agents/skills/finpilot-overview.md
+../../.agents/skills/finpilot-overview/SKILL.md
