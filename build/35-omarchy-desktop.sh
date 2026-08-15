@@ -253,6 +253,16 @@ for desktop in /etc/skel/.config/autostart/*.desktop; do
 done
 shopt -u nullglob
 
+# Pre-seed migration markers: a fresh install has nothing to migrate, so every
+# shipped migration is marked done (upstream's installer does this via
+# omarchy-provision-user --first-install, which nothing calls on lateralus).
+# Without markers every login toasts "N pending migrations" and omarchy-migrate
+# would replay years of Arch-era migrations against a pristine home.
+install -d /etc/skel/.local/state/omarchy/migrations
+for migration in /usr/share/omarchy/migrations/*.sh; do
+    touch "/etc/skel/.local/state/omarchy/migrations/$(basename "${migration}")"
+done
+
 echo "::endgroup::"
 
 echo "::group:: Install Lateralus Omarchy Integration"
@@ -321,6 +331,11 @@ grep -rqs 'sddm' /usr/lib/sysusers.d/
 fc-list | grep -i 'JetBrainsMono Nerd Font' > /dev/null
 # Minimum-version guard: the Quickshell shell + Lua configs need Hyprland 0.56+
 rpm -q --qf '%{VERSION}' hyprland-no-session | grep -qE '^(0\.(5[6-9]|[6-9][0-9])|[1-9])'
+# Every shipped migration must have a pre-seeded skel marker (fresh installs
+# have nothing to migrate); count equality catches payload layout changes too.
+[[ "$(find /usr/share/omarchy/migrations -maxdepth 1 -name '*.sh' | wc -l)" -gt 0 ]]
+[[ "$(find /usr/share/omarchy/migrations -maxdepth 1 -name '*.sh' | wc -l)" == \
+    "$(find /etc/skel/.local/state/omarchy/migrations -maxdepth 1 -name '*.sh' | wc -l)" ]]
 
 echo "::endgroup::"
 
