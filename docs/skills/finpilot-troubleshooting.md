@@ -1,1 +1,1 @@
-../../.agents/skills/finpilot-troubleshooting.md
+../../.agents/skills/finpilot-troubleshooting/SKILL.md

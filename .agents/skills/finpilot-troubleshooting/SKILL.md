@@ -4,8 +4,6 @@ description: >-
   Consolidated symptom-cause-fix table for finpilot. Covers local build failures,
   CI failures, runtime issues, Renovate problems, COPR persistence, and ujust
   command not found. Use when something is broken and you need a quick diagnosis.
-metadata:
-  context7-sources: []
 ---
 
 # finpilot Troubleshooting
@@ -21,9 +19,9 @@ metadata:
 
 ## When NOT to Use
 
-- You are still setting up the fork for the first time — see `finpilot-onboarding.md`
-- You are deciding where to add a package — see `finpilot-packages.md`
-- You need to plan ongoing maintenance — see `finpilot-maintain.md`
+- You are still setting up the fork for the first time — use `finpilot-onboarding`
+- You are deciding where to add a package — use `finpilot-packages`
+- You need to plan ongoing maintenance — use `finpilot-maintain`
 
 ## Core Process
 
