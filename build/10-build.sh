@@ -152,6 +152,12 @@ systemctl enable lateralus-flatpak-setup.service
 systemctl enable lateralus-auto-upgrade.timer
 systemctl enable podman-auto-update.timer
 
+# Fedora's grub2-tools ships a per-user timer that writes boot_success to
+# grubenv 2 minutes after every login; /boot is read-only on bootc, so it
+# fails permanently (and Omarchy's failed-unit toast surfaces it). Boot
+# counting via grubenv is unused on image-based systems.
+systemctl --global mask grub-boot-success.timer
+
 # Pre-enable user services for new users via /etc/skel
 mkdir -p /etc/skel/.config/systemd/user/default.target.wants
 ln -sf /usr/lib/systemd/user/tailscale-systray.service /etc/skel/.config/systemd/user/default.target.wants/tailscale-systray.service
