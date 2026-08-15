@@ -28,13 +28,13 @@ md.obsidian.Obsidian
 net.ankiweb.Anki
 net.mullvad.MullvadBrowser
 org.audacityteam.Audacity
-org.chromium.Chromium
 org.ferdium.Ferdium
 org.gnome.FileRoller
 org.gnome.Firmware
 org.gnome.Loupe
 org.gnome.Papers
 org.inkscape.Inkscape
+org.localsend.localsend_app
 org.mozilla.Thunderbird
 org.onlyoffice.desktopeditors
 org.qbittorrent.qBittorrent
