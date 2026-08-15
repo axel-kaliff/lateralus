@@ -64,30 +64,39 @@ echo "  image-vendor: ${IMAGE_VENDOR}"
 ###############################################################################
 # Customize /usr/lib/os-release
 ###############################################################################
-# Only modify if the file exists and VARIANT_ID is not already set
-if [[ -f "${OS_RELEASE}" ]] && ! grep -q "^VARIANT_ID=" "${OS_RELEASE}"; then
-	# Read existing values
+# Update keys IN PLACE (replace if present, append if missing) instead of
+# appending a block. The template's append produced a comment line, a blank
+# line, and duplicate keys — bootc-image-builder's os-release parser rejects
+# lines that aren't KEY=VALUE ("readOSRelease: invalid input"), which broke
+# every qcow2/ISO build. In-place updates keep the file strictly parseable
+# and idempotent while producing the same effective values (os-release
+# semantics: last duplicate wins, so these were the winners anyway).
+set_os_release_key() {
+	local key="$1" value="$2"
+	if grep -q "^${key}=" "${OS_RELEASE}"; then
+		sed -i "s|^${key}=.*|${key}=\"${value}\"|" "${OS_RELEASE}"
+	else
+		echo "${key}=\"${value}\"" >>"${OS_RELEASE}"
+	fi
+}
+
+if [[ -f "${OS_RELEASE}" ]]; then
 	if [[ -n "${VERSION:-}" ]]; then
 		OS_VERSION="${VERSION}"
 	else
 		OS_VERSION="${UBLUE_IMAGE_TAG}"
 	fi
 
-	# Append our identity
-	cat >>"${OS_RELEASE}" <<EOF
-
-# ${IMAGE_NAME} image identity
-VARIANT_ID="${IMAGE_FLAVOR}"
-PRETTY_NAME="${IMAGE_PRETTY_NAME}"
-NAME="${IMAGE_NAME}"
-IMAGE_ID="${IMAGE_NAME}"
-IMAGE_VERSION="${OS_VERSION}"
-ID_LIKE="${IMAGE_LIKE}"
-HOME_URL="${HOME_URL}"
-DOCUMENTATION_URL="${DOCUMENTATION_URL}"
-SUPPORT_URL="${SUPPORT_URL}"
-BUG_REPORT_URL="${BUG_REPORT_URL}"
-EOF
+	set_os_release_key VARIANT_ID "${IMAGE_FLAVOR}"
+	set_os_release_key PRETTY_NAME "${IMAGE_PRETTY_NAME}"
+	set_os_release_key NAME "${IMAGE_NAME}"
+	set_os_release_key IMAGE_ID "${IMAGE_NAME}"
+	set_os_release_key IMAGE_VERSION "${OS_VERSION}"
+	set_os_release_key ID_LIKE "${IMAGE_LIKE}"
+	set_os_release_key HOME_URL "${HOME_URL}"
+	set_os_release_key DOCUMENTATION_URL "${DOCUMENTATION_URL}"
+	set_os_release_key SUPPORT_URL "${SUPPORT_URL}"
+	set_os_release_key BUG_REPORT_URL "${BUG_REPORT_URL}"
 
 	echo "Customized ${OS_RELEASE}"
 fi
