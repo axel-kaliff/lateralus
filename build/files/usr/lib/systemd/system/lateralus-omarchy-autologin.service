@@ -1,5 +1,5 @@
 [Unit]
-Description=Enable SDDM autologin on single-user LUKS systems (Omarchy seamless login)
+Description=Seed SDDM greeter state; enable autologin on single-user LUKS systems
 After=lateralus-omarchy-setup.service
 Before=display-manager.service
 # An existing autologin.conf (user/ujust decision) always wins; the opt-out

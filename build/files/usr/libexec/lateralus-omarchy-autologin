@@ -1,13 +1,21 @@
 #!/usr/bin/bash
-# Conditionally enable SDDM autologin at boot — Omarchy v4's own policy:
+# First-boot SDDM session state + conditional autologin — Omarchy v4's policy:
 # permanent autologin is only granted when full-disk encryption makes the
 # LUKS passphrase the auth boundary. Silently removing the login gate on a
 # multi-user or unencrypted machine would be a security regression a rebase
-# must never cause, so this enables autologin only when ALL hold:
+# must never cause.
+#
+# Regardless of autologin, single-user machines get /var/lib/sddm/state.conf
+# seeded with the user + Omedora session (mirroring upstream
+# omarchy-provision-owner): the Omarchy SDDM theme has no username field —
+# it submits userModel.lastUser, which is empty until a first successful
+# login is recorded, so an unseeded greeter can never log anyone in.
+#
+# Autologin is then enabled only when ALL hold:
 #
 #   1. exactly one human user exists
-#   2. the root filesystem sits on a LUKS-encrypted device
-#   3. SDDM is the enabled display manager
+#   2. SDDM is the enabled display manager
+#   3. the root filesystem sits on a LUKS-encrypted device
 #
 # Unit-level guards (lateralus-omarchy-autologin.service): never runs if
 # /etc/sddm.conf.d/autologin.conf already exists (user/ujust decision wins)
@@ -24,8 +32,34 @@ while IFS=: read -r user _ uid _ _ home _; do
 done < /etc/passwd
 
 if [ "${#human_users[@]}" -ne 1 ]; then
-    echo "Found ${#human_users[@]} human users — autologin needs exactly 1, skipping."
+    echo "Found ${#human_users[@]} human users — Omarchy greeter state needs exactly 1, skipping."
+    echo "(The Omarchy SDDM theme is single-user; multi-user machines: ujust omarchy-greeter cosmic)"
     exit 0
+fi
+
+dm_target="$(readlink -f /etc/systemd/system/display-manager.service 2> /dev/null || true)"
+if [ "$(basename "$dm_target")" != "sddm.service" ]; then
+    echo "Display manager is not SDDM (${dm_target:-none}) — skipping."
+    exit 0
+fi
+
+# Seed last-user/session state so the greeter can authenticate the user at
+# all. Never overwrite: after any successful login SDDM maintains this itself.
+session_file() {
+    local session
+    for session in omedora.desktop omarchy.desktop hyprland.desktop; do
+        if [ -f "/usr/share/wayland-sessions/${session}" ]; then
+            echo "/usr/share/wayland-sessions/${session}"
+            return 0
+        fi
+    done
+    return 1
+}
+if [ ! -f /var/lib/sddm/state.conf ]; then
+    install -d /var/lib/sddm
+    printf '[Last]\nUser=%s\nSession=%s\n' "${human_users[0]}" "$(session_file)" \
+        > /var/lib/sddm/state.conf
+    echo "Seeded SDDM last-user state for ${human_users[0]}."
 fi
 
 # Root device LUKS check: resolve the source of /sysroot (ostree) or /,
@@ -34,12 +68,6 @@ root_src="$(findmnt -no SOURCE /sysroot 2> /dev/null || findmnt -no SOURCE /)"
 root_src="${root_src%%\[*}"
 if ! lsblk -rsno TYPE "$root_src" 2> /dev/null | grep -qx crypt; then
     echo "Root device ${root_src} is not LUKS-encrypted — keeping the SDDM greeter."
-    exit 0
-fi
-
-dm_target="$(readlink -f /etc/systemd/system/display-manager.service 2> /dev/null || true)"
-if [ "$(basename "$dm_target")" != "sddm.service" ]; then
-    echo "Display manager is not SDDM (${dm_target:-none}) — skipping autologin."
     exit 0
 fi
 
