@@ -12,30 +12,44 @@ Instead, you create your own OS repository based on this template, allowing full
 
 ## What Makes this Raptor Different?
 
-Here are the changes from [Base Image Name]. This image is based on [Bluefin/Bazzite/Aurora/etc] and includes these customizations:
+Lateralus is built on `ghcr.io/ublue-os/base-main` (Fedora bootc, no desktop) and assembles its own desktop stack:
 
-### Added Packages (Build-time)
+- **Omarchy v4 desktop** (default) — Hyprland + the Quickshell-based Omarchy shell, themes, keybindings, and `omarchy` CLI, delivered by the [omedora](https://github.com/AndrewGaspar/omedora) RPMs (Fedora adaptation of [basecamp/omarchy](https://github.com/basecamp/omarchy)) from the `agaspar/omedora-4` COPR. See [Omarchy on lateralus](#omarchy-on-lateralus).
+- **COSMIC desktop** — System76's COSMIC stays installed as a second session with the Evergreen theme.
+- **Ghostty** built from source, the default terminal in both desktops.
+- **Runtime app delivery**: CLI tools via Homebrew (`custom/brew/default.Brewfile`), GUI apps via Flatpak (`custom/flatpaks/install.list`), both installed by first-boot services. Exceptions live in the image as RPMs only when they must (compositor stack, portals, script dependencies like `gum`/`jq`/`fzf`/`starship`, and Chromium — Flatpak Chromium breaks Omarchy's per-webapp window classes).
+- **Lateralus branding** — Plymouth splash, GRUB theme, os-release identity are lateralus, not Omarchy.
 
 - **System packages**: `tmux` and `gum` — tmux is the template's package-manager cache smoke test, and gum provides the interactive prompts used by the default ujust recipes.
 
-### Added Applications (Runtime)
+## Omarchy on lateralus
 
-- **CLI Tools (Homebrew)**: neovim, helix - [brief explanation]
-- **GUI Apps (Flatpak)**: Spotify, Thunderbird - [brief explanation]
+The Omarchy *experience* with cloud-native *mechanics*:
 
-### Removed/Disabled
+| Omarchy on Arch | lateralus equivalent |
+| --- | --- |
+| `omarchy-update` (pacman + AUR + snapper snapshot) | `omarchy update` → brew upgrade + flatpak update + `bootc upgrade` (also: `ujust update-all`, daily auto-upgrade timer) |
+| snapper snapshots + limine boot menu rollback | `bootc rollback` (previous deployment stays on the boot menu) |
+| `omarchy-pkg-add` / AUR installs | `brew install` (CLI) / `flatpak install` (GUI) / image rebuild (system) |
+| SDDM autologin written by the installer | `lateralus-omarchy-autologin.service`: auto-enables on single-user LUKS machines (the passphrase is the auth boundary); otherwise the SDDM greeter shows both Omarchy and COSMIC sessions |
+| configs copied at install time | seeded from `/etc/skel` by `lateralus-omarchy-setup.service` — **never overwrites existing files**, so your stowed dotfiles always win |
 
-- List anything removed from base image
+Handy commands:
 
-### Configuration Changes
+- `ujust omarchy-autologin` / `ujust omarchy-autologin-off` — toggle seamless login
+- `ujust omarchy-greeter <sddm|cosmic>` — switch display manager (reboot to apply)
+- `ujust omarchy-setup` — re-seed Omarchy defaults for your user (non-destructive)
+- `ujust omarchy-reset-configs` — reset to shipped defaults (destructive, confirms; re-link your dotfiles with `ujust setup` afterwards)
+- `ujust omarchy-localsend-firewall` — open LocalSend's port in firewalld
 
-- Any systemd services enabled/disabled
-- Desktop environment changes
-- Other notable modifications
+Notes:
 
-_Last updated: [date]_
+- The update badge in the bar reflects a staged bootc deployment (`/run/lateralus/update-staged`, refreshed by the auto-upgrade timer); it clears on reboot.
+- Existing machines that had the Chromium **flatpak**: it was dropped from the install list in favor of RPM Chromium (webapp support) — remove the old one with `flatpak uninstall org.chromium.Chromium`.
+- To let the Omarchy theme system restyle your **stowed** Ghostty config, add this line to it: `config-file = ?"~/.local/state/omarchy/current/theme/ghostty.conf"`.
+- Update-subsystem overrides live in `/usr/share/lateralus/omarchy-overrides` (`build/files/usr/share/lateralus/omarchy-overrides/bin`) and are installed **over** the RPM's binaries at image build — never patch the RPM payload in place.
 
-> Replace the placeholders above with your actual customizations whenever you add or remove packages, apps, or configuration. This section is what tells users how your image differs from the base.
+_Last updated: 2026-08-15_
 
 ## Guided Copilot Mode
 
