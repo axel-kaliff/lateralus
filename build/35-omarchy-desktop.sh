@@ -56,6 +56,8 @@ echo "::group:: Install Official-Repo Packages for Omarchy"
 # chromium is a deliberate RPM exception to the "GUI apps are flatpaks" rule:
 # Flatpak Chromium groups all --app windows under one window class, which
 # breaks Omarchy's per-webapp window matching (flathub/org.chromium.Chromium#216).
+# perl-JSON-PP: omarchy-menu-select/-input build their Quickshell IPC payload
+# with `perl -MJSON::PP`; Arch bundles JSON::PP in core perl, Fedora splits it.
 dnf5 install -y \
     sddm \
     sddm-wayland-generic \
@@ -74,6 +76,7 @@ dnf5 install -y \
     pamixer \
     libnotify \
     inotify-tools \
+    perl-JSON-PP \
     socat \
     plocate \
     tesseract \
