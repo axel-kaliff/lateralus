@@ -93,7 +93,7 @@ echo "::group:: System-wide Brew PATH"
 # Pattern from ublue-os/brew: only interactive shells, append (not prepend) to PATH
 # so system binaries always take priority over brew-installed ones
 #
-# Three layers — each covers a different session type:
+# Four layers — each covers a different session type:
 #   1. environment.d: graphical sessions via systemd user manager (all shells,
 #      all terminal emulators, regardless of login/non-login). Lives in /usr/lib
 #      (immutable, survives rebases). Does NOT affect SSH.
@@ -102,6 +102,13 @@ echo "::group:: System-wide Brew PATH"
 #      ostree 3-way-merges /etc on rebase, so build-time files persist fine.
 #   3. /usr/share/fish/vendor_conf.d: fish-specific config (XDG vendor path,
 #      immutable). Sets HOMEBREW_* and fish-native PATH append.
+#   4. uwsm env.d: Hyprland/Omarchy sessions. uwsm recomposes the session
+#      environment at login (prepare-env.sh sources uwsm/env.d/* fragments
+#      from XDG_CONFIG_HOME:XDG_CONFIG_DIRS:XDG_DATA_DIRS) and exports its
+#      PATH into the systemd user manager, overriding layer 1. Without this
+#      layer, GUI-launched apps (omarchy menu → ghostty -e nvim/lazygit)
+#      can't find brew binaries. Layer 2 doesn't help: profile.d guards on
+#      interactive shells, and the session launch shell is non-interactive.
 
 # Layer 1: systemd environment.d — covers all graphical sessions
 mkdir -p /usr/lib/environment.d
@@ -134,6 +141,37 @@ if test -d /home/linuxbrew/.linuxbrew; and status is-interactive
     fish_add_path -aP $HOMEBREW_PREFIX/bin $HOMEBREW_PREFIX/sbin
 end
 FISHBREWEOF
+
+# Layer 4: uwsm env.d — Hyprland/Omarchy session environment (POSIX sh).
+# Users can override via ~/.config/uwsm/env.d/.
+mkdir -p /usr/share/uwsm/env.d
+cat > /usr/share/uwsm/env.d/50-lateralus-brew << 'UWSMBREWEOF'
+# Append Homebrew to the uwsm session PATH (system binaries keep priority).
+# uwsm exports this PATH into the systemd user manager at session start,
+# overriding /usr/lib/environment.d/50-lateralus-brew.conf — without this
+# fragment, GUI-launched apps (omarchy menus, ghostty -e <tool>) can't find
+# brew binaries.
+if [ -d /home/linuxbrew/.linuxbrew ]; then
+  HOMEBREW_PREFIX="${HOMEBREW_PREFIX:-/home/linuxbrew/.linuxbrew}"
+  export HOMEBREW_PREFIX
+  case ":${PATH}:" in
+  *":${HOMEBREW_PREFIX}/bin:"*) ;;
+  *) export PATH="${PATH}:${HOMEBREW_PREFIX}/bin:${HOMEBREW_PREFIX}/sbin" ;;
+  esac
+fi
+UWSMBREWEOF
+
+echo "::endgroup::"
+
+echo "::group:: Keyboard Remapping (keyd)"
+
+# keyd: system-wide key remapping at the evdev layer — applies in Hyprland,
+# COSMIC, and virtual consoles alike. Not packaged in Fedora; installed from
+# the community COPR. Config ships in /etc (keyd only reads /etc/keyd/;
+# build-time /etc files persist via ostree 3-way merge).
+copr_install_isolated "alternateved/keyd" keyd
+install -Dm644 /ctx/build/files/etc/keyd/default.conf /etc/keyd/default.conf
+systemctl enable keyd.service
 
 echo "::endgroup::"
 

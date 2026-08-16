@@ -1,0 +1,81 @@
+#!/bin/bash
+
+# omarchy:summary=Launch the default browser as determined by xdg-settings.
+# omarchy:args=[url]
+#
+# Lateralus override (installed over the omedora RPM binary by
+# build/35-omarchy-desktop.sh): GUI apps on lateralus are Flatpaks, but the
+# upstream script only searches {~/.local,~/.nix-profile,/usr}/share for the
+# default browser's desktop entry and execs its first Exec token — both fail
+# for Flatpak browsers (entries live in the flatpak export dirs; Exec wraps
+# `flatpak run`). Resolve the entry across all standard dirs and launch
+# Flatpak browsers via their app id instead.
+
+default_browser=$(env -u BROWSER xdg-settings get default-web-browser)
+if [[ -z $default_browser ]]; then
+  default_browser=$(xdg-mime query default x-scheme-handler/https)
+fi
+
+desktop_file=""
+for dir in "$HOME/.local/share/applications" \
+  "$HOME/.local/share/flatpak/exports/share/applications" \
+  /var/lib/flatpak/exports/share/applications \
+  "$HOME/.nix-profile/share/applications" \
+  /usr/local/share/applications \
+  /usr/share/applications; do
+  if [[ -f $dir/$default_browser ]]; then
+    desktop_file="$dir/$default_browser"
+    break
+  fi
+done
+
+if [[ -z $desktop_file ]]; then
+  omarchy-notification-send -u critical "Browser launch failed" \
+    "No desktop entry found for '${default_browser:-<unset>}'"
+  exit 1
+fi
+
+flatpak_app=$(sed -n 's/^X-Flatpak=//p' "$desktop_file" | head -1)
+
+if [[ -n $flatpak_app ]]; then
+  browser_cmd=(flatpak run "$flatpak_app")
+  focus_class="$flatpak_app"
+  case $flatpak_app in
+  *zen* | *firefox* | *librewolf* | *floorp* | *waterfox* | *mullvad*)
+    private_flag="--private-window"
+    ;;
+  *edge*)
+    private_flag="--inprivate"
+    ;;
+  *)
+    private_flag="--incognito"
+    ;;
+  esac
+else
+  browser_exec=$(sed -n 's/^Exec=\([^ ]*\).*/\1/p' "$desktop_file" | head -1)
+  browser_cmd=("$browser_exec")
+  focus_class=$(basename "$browser_exec" -stable)
+  if "$browser_exec" --help 2>/dev/null | grep -q MOZ_LOG; then
+    private_flag="--private-window"
+  elif [[ $browser_exec =~ edge ]]; then
+    private_flag="--inprivate"
+  else
+    private_flag="--incognito"
+  fi
+fi
+
+systemd-run --user --quiet --collect --unit="omarchy-browser-$(date +%s%N)" \
+  --property=StandardOutput=null --property=StandardError=null \
+  uwsm-app -- "${browser_cmd[@]}" "${@/--private/$private_flag}"
+
+url=""
+for argument in "$@"; do
+  if [[ $argument != "--private" ]]; then
+    url=$argument
+    break
+  fi
+done
+
+if [[ -n $url && -n ${HYPRLAND_INSTANCE_SIGNATURE:-} ]]; then
+  omarchy-hyprland-focus-app "^${focus_class}.*$" || true
+fi
