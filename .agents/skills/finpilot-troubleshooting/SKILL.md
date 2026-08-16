@@ -82,6 +82,7 @@ description: >-
 | Service not starting                    | Service not enabled or missing dependency                   | Check `systemctl status service.name`, verify `systemctl enable` in `build/10-build.sh`                                         |
 | Missing package after boot              | Installed in wrong layer or runtime vs build-time confusion | Check if it's in `build/10-build.sh` (build-time) or `custom/brew/` (runtime)                                                   |
 | `/opt` is not writable                  | `/opt` is symlinked to `/var/opt` by default                | In `Containerfile`, replace `RUN rm -rf /opt && ln -s /var/opt /opt` with `RUN rm /opt && mkdir /opt` if immutability is needed |
+| GUI-launched app can't find a brew binary (ghostty toast "Requested executable not found") while the same command works in a terminal | uwsm recomposes the Hyprland session env at login (`/usr/libexec/uwsm/prepare-env.sh` sources `uwsm/env.d/*` from `XDG_CONFIG_HOME:XDG_CONFIG_DIRS:XDG_DATA_DIRS`) and exports its PATH into the systemd user manager, clobbering the `environment.d` brew PATH; `/etc/profile.d` brew scripts are interactive-only so they never reach the session env | Brew PATH layer 4 in `build/10-build.sh`: `/usr/share/uwsm/env.d/50-lateralus-brew`. Verify with `systemctl --user show-environment \| grep PATH` inside a Hyprland session |
 
 ## Renovate Issues
 
