@@ -21,6 +21,10 @@ permissions:
   contents: write
   pull-requests: write
   issues: write
+  # The release gate resolves the :testing image from GHCR, so its job
+  # requests packages: read; a called workflow may not request permissions
+  # the caller withholds (omitting it caused startup_failure on every run).
+  packages: read
   actions: read
   statuses: write
 
