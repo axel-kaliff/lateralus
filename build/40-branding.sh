@@ -73,4 +73,27 @@ systemctl enable lateralus-grub-setup.service
 
 echo "::endgroup::"
 
+echo "::group:: Rebrand Omedora Desktop as Lateralus"
+
+# The omedora payload brands the user-visible desktop as "Omedora". Rebrand
+# the spots users actually see; runs after 35-omarchy-desktop.sh so the RPM
+# files exist.
+
+# Screensaver text art (ttfx animates ~/.config/omarchy/branding/screensaver.txt;
+# per-user copies are seeded from skel). Art: pyfiglet -f delta_corps_priest_1.
+install -Dm644 /ctx/build/files/usr/share/lateralus/branding/screensaver.txt \
+    /etc/skel/.config/omarchy/branding/screensaver.txt
+
+# Menu: the update entry is labeled "Omedora". Override just the label via the
+# supported extensions mechanism (partial overrides merge by id).
+menu_ext=/etc/skel/.config/omarchy/extensions/omarchy-menu.jsonc
+grep -q '^}$' "${menu_ext}"
+sed -i 's|^}$|  // Lateralus branding: rename the update entry (default label "Omedora")\n  "update.omarchy": {"label":"Lateralus"}\n}|' "${menu_ext}"
+
+# SDDM session picker entry
+sed -i 's/^Name=Omedora$/Name=Lateralus/' /usr/share/wayland-sessions/omedora.desktop
+grep -q '^Name=Lateralus$' /usr/share/wayland-sessions/omedora.desktop
+
+echo "::endgroup::"
+
 echo "Branding complete!"
