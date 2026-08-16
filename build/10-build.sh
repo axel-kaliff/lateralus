@@ -163,6 +163,18 @@ UWSMBREWEOF
 
 echo "::endgroup::"
 
+echo "::group:: Keyboard Remapping (keyd)"
+
+# keyd: system-wide key remapping at the evdev layer — applies in Hyprland,
+# COSMIC, and virtual consoles alike. Not packaged in Fedora; installed from
+# the community COPR. Config ships in /etc (keyd only reads /etc/keyd/;
+# build-time /etc files persist via ostree 3-way merge).
+copr_install_isolated "alternateved/keyd" keyd
+install -Dm644 /ctx/build/files/etc/keyd/default.conf /etc/keyd/default.conf
+systemctl enable keyd.service
+
+echo "::endgroup::"
+
 echo "::group:: System Configuration"
 
 # Enable/disable systemd services
