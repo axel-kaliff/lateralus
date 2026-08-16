@@ -19,23 +19,27 @@ echo "::endgroup::"
 
 echo "::group:: Install Nerd Fonts"
 
-# Homebrew casks are macOS-only — install nerd fonts directly from GitHub releases
+# Homebrew casks are macOS-only — install nerd fonts directly from GitHub releases.
+# Each family extracts directly under /usr/share/fonts (files one level below the
+# font root): the from-source ghostty build (30-cosmic-desktop.sh) does not
+# discover font files nested deeper — a nerd-fonts/<family>/ layout is visible
+# to fc-list but invisible to `ghostty +list-fonts`, and ghostty then falls
+# back to Noto Serif in terminals.
 NERD_FONTS_VERSION="v3.4.0"
-FONT_DIR="/usr/share/fonts/nerd-fonts"
-mkdir -p "${FONT_DIR}"
+FONT_BASE="/usr/share/fonts"
 
 for font in FiraCode JetBrainsMono Meslo Hack; do
     echo "Installing ${font} Nerd Font..."
     curl -fsSL --connect-timeout 30 --max-time 120 \
         "https://github.com/ryanoasis/nerd-fonts/releases/download/${NERD_FONTS_VERSION}/${font}.tar.xz" \
         -o "/tmp/${font}.tar.xz"
-    mkdir -p "${FONT_DIR}/${font}"
-    tar -xf "/tmp/${font}.tar.xz" -C "${FONT_DIR}/${font}"
+    mkdir -p "${FONT_BASE}/nerd-fonts-${font}"
+    tar -xf "/tmp/${font}.tar.xz" -C "${FONT_BASE}/nerd-fonts-${font}"
     rm -f "/tmp/${font}.tar.xz"
 done
 
 # Rebuild font cache
-fc-cache -f "${FONT_DIR}"
+fc-cache -f "${FONT_BASE}"
 
 echo "::endgroup::"
 
