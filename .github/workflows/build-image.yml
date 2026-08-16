@@ -104,8 +104,37 @@ jobs:
         uses: projectbluefin/actions/bootc-build/setup-runner@8906e13e3ac1654504e75ad27440bffb28e52fbc # v1
         with:
           storage-backend: btrfs
-          update-podman: "true"
           install-tools: '["just"]'
+
+      # The 2026-08-10 runner image switched to a static podman bundle whose
+      # /etc/containers/storage.conf forces mount_program = fuse-overlayfs
+      # even for rootful podman. fuse-overlayfs corrupts small files
+      # rewritten in a layer at commit time (zeroed tails -> dnf.conf
+      # "Missing '=' on line 4", cf. containers/fuse-overlayfs#333) and
+      # forces naive whole-filesystem diffs through FUSE, turning trivial
+      # layer commits into 10-16 minute stalls. Cleaning storage.conf alone
+      # is NOT enough: any earlier podman run stamps
+      # overlay/.has-mount-program=true into the graph root, after which
+      # containers/storage silently re-execs fuse-overlayfs forever while
+      # `podman info` still reports a clean config. So: clean the config,
+      # wipe the storage state, delete the binary so no auto-detection can
+      # resurrect it, then assert the store is really native. No-op safe if
+      # setup-runner's btrfs loopback ever works again (no /mnt disk on
+      # current runners, so it silently skips).
+      - name: Force native kernel overlayfs storage
+        shell: bash
+        run: |
+          sudo sed -i -e '/^mount_program/d' -e 's/^mountopt.*/mountopt = "nodev"/' \
+            /etc/containers/storage.conf
+          sudo podman system reset --force
+          sudo rm -f /usr/local/bin/fuse-overlayfs /usr/bin/fuse-overlayfs
+          sudo podman info --format 'storage: {{.Store.GraphDriverName}} {{.Store.GraphOptions}}'
+          flag=$(sudo cat /var/lib/containers/storage/overlay/.has-mount-program 2>/dev/null || echo absent)
+          echo "mount-program flag: ${flag}"
+          if [[ "${flag}" == "true" ]] || sudo grep -q '^mount_program' /etc/containers/storage.conf; then
+            echo "storage would still use fuse-overlayfs; refusing to build (see PR #9)"
+            exit 1
+          fi
 
       - name: Restore DNF cache
         id: dnf-cache-restore

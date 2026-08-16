@@ -79,8 +79,11 @@ RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
     --mount=type=tmpfs,dst=/tmp \
     /ctx/build/00-image-info.sh
 
-# Set dnf options before build scripts (persists across subsequent RUN layers)
-RUN dnf5 config-manager setopt keepcache=1 install_weak_deps=0
+# Set dnf options before build scripts (persists across subsequent RUN layers).
+# "true &&" keeps this instruction distinct from its pre-2026-08-16 wording: the
+# registry build cache may still hold a layer for the old text whose dnf.conf
+# tail was zeroed by fuse-overlayfs in CI (containers/fuse-overlayfs#333).
+RUN true && dnf5 config-manager setopt keepcache=1 install_weak_deps=0
 
 RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
     --mount=type=cache,dst=/var/cache/libdnf5 \
