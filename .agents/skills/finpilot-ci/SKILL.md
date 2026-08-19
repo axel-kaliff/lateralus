@@ -70,6 +70,15 @@ uses: projectbluefin/actions/bootc-build/setup-runner@<sha> # v1
 
 The SHA comment (`# v1`) is for human readability only — Renovate ignores it.
 
+## Reusable Workflow Permissions
+
+A caller's `permissions:` block is a **ceiling** for every nested job in a reusable
+workflow. A nested job requesting an ungranted permission fails the whole workflow
+at startup (`startup_failure`, no jobs run, no logs — only the inline validation
+error). Issue #256: `promote-main-to-stable.yml` omitted `packages`, but the
+reusable's `gate` job requests `packages: read`. Fix: update the caller to grant
+at least the permission(s) requested by the reusable workflow (prefer the minimal set).
+
 ## Rechunking
 
 Set `ENABLE_RECHUNKING: "true"` in `build-image.yml` to enable the existing
