@@ -18,10 +18,11 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
-  pull-requests: write
-  issues: write
   actions: read
+  contents: write
+  issues: write
+  packages: read
+  pull-requests: write
   statuses: write
 
 concurrency:
