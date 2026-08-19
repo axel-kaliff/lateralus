@@ -76,8 +76,8 @@ A caller's `permissions:` block is a **ceiling** for every nested job in a reusa
 workflow. A nested job requesting an ungranted permission fails the whole workflow
 at startup (`startup_failure`, no jobs run, no logs — only the inline validation
 error). Issue #256: `promote-main-to-stable.yml` omitted `packages`, but the
-reusable's `gate` job requests `packages: read`. Fix: union every nested job's
-permissions into the caller.
+reusable's `gate` job requests `packages: read`. Fix: update the caller to grant
+at least the permission(s) requested by the reusable workflow (prefer the minimal set).
 
 ## Rechunking
 
