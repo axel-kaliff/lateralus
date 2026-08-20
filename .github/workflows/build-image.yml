@@ -98,6 +98,7 @@ jobs:
         uses: projectbluefin/actions/bootc-build/setup-runner@cad7d15c30224a7a1a49c5ff0fd2054ca57b9cfd # v1
         with:
           storage-backend: btrfs
+          native-overlay: "true"
           update-podman: "true"
           install-tools: '["just"]'
 
