@@ -9,10 +9,14 @@
 Window.SetBackgroundTopColor(0.04, 0.03, 0.07);
 Window.SetBackgroundBottomColor(0.06, 0.04, 0.10);
 
+// All shapes are PNGs, not text glyphs: the initramfs renders text with
+// label-freetype, which runs in the C locale and can't decode non-ASCII
+// UTF-8 (glyphs like "●" become empty boxes at boot). Prompt text below
+// must likewise stay ASCII-only.
 center_x = Window.GetX() + Window.GetWidth() / 2;
 center_y = Window.GetY() + Window.GetHeight() / 2;
 PI = 3.14159;
-DOT_W = 6; // approximate half-width of a glyph for centering
+DOT_W = 6; // half-width of the 12px dot images, for centering
 
 // ── Title ───────────────────────────────────────────────────────────────────
 title = Image.Text("L A T E R A L U S", 0.65, 0.55, 0.40, 1, "Sans 14");
@@ -29,14 +33,14 @@ EYE_LOWER = 22;
 NUM_LID = 11;
 
 // Pupil — brightest point, center of consciousness
-pupil_img = Image.Text("●", 0.95, 0.75, 0.20);
+pupil_img = Image("dot-pupil.png");
 pupil_sprite = Sprite(pupil_img);
 pupil_sprite.SetOpacity(0.0);
 
 // Upper eyelid
 upper_lid = [];
 for (i = 0; i < NUM_LID; i++) {
-    img = Image.Text("●", 0.85, 0.65, 0.20);
+    img = Image("dot-lid.png");
     upper_lid[i] = Sprite(img);
     upper_lid[i].SetOpacity(0.0);
 }
@@ -44,7 +48,7 @@ for (i = 0; i < NUM_LID; i++) {
 // Lower eyelid
 lower_lid = [];
 for (i = 0; i < NUM_LID; i++) {
-    img = Image.Text("●", 0.85, 0.65, 0.20);
+    img = Image("dot-lid.png");
     lower_lid[i] = Sprite(img);
     lower_lid[i].SetOpacity(0.0);
 }
@@ -54,7 +58,7 @@ NUM_IRIS = 8;
 IRIS_RADIUS = 20;
 iris = [];
 for (i = 0; i < NUM_IRIS; i++) {
-    img = Image.Text("●", 0.90, 0.70, 0.15);
+    img = Image("dot-iris.png");
     iris[i] = Sprite(img);
     iris[i].SetOpacity(0.0);
 }
@@ -68,21 +72,21 @@ RING3_N = 21;  RING3_R = 200;
 
 ring1 = [];
 for (i = 0; i < RING1_N; i++) {
-    img = Image.Text("●", 0.55, 0.30, 0.65);
+    img = Image("dot-ring1.png");
     ring1[i] = Sprite(img);
     ring1[i].SetOpacity(0.0);
 }
 
 ring2 = [];
 for (i = 0; i < RING2_N; i++) {
-    img = Image.Text("●", 0.40, 0.22, 0.55);
+    img = Image("dot-ring2.png");
     ring2[i] = Sprite(img);
     ring2[i].SetOpacity(0.0);
 }
 
 ring3 = [];
 for (i = 0; i < RING3_N; i++) {
-    img = Image.Text("●", 0.28, 0.18, 0.42);
+    img = Image("dot-ring3.png");
     ring3[i] = Sprite(img);
     ring3[i].SetOpacity(0.0);
 }
@@ -208,7 +212,7 @@ fun display_password_callback(prompt, bullets) {
 
     bullet_str = "";
     for (i = 0; i < bullets; i++)
-        bullet_str += "● ";
+        bullet_str += "* ";
     pw_dots = Image.Text(bullet_str, 0.85, 0.65, 0.20, 1, "Sans 14");
     pw_dot_sprite = Sprite(pw_dots);
     pw_dot_sprite.SetX(center_x - pw_dots.GetWidth() / 2);

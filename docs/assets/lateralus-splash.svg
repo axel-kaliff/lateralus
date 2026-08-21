@@ -1,0 +1,96 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 640" width="1280" height="640" role="img" aria-label="Lateralus boot splash: a golden third eye inside a violet sacred-geometry mandala">
+<defs>
+<linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0%" stop-color="#0A0812"/>
+<stop offset="100%" stop-color="#0F0A1A"/>
+</linearGradient>
+<radialGradient id="gpupil"><stop offset="0%" stop-color="#F2BF33" stop-opacity="1"/><stop offset="35%" stop-color="#F2BF33" stop-opacity="0.85"/><stop offset="60%" stop-color="#F2BF33" stop-opacity="0.25"/><stop offset="100%" stop-color="#F2BF33" stop-opacity="0"/></radialGradient><radialGradient id="giris"><stop offset="0%" stop-color="#E6B226" stop-opacity="1"/><stop offset="35%" stop-color="#E6B226" stop-opacity="0.85"/><stop offset="60%" stop-color="#E6B226" stop-opacity="0.25"/><stop offset="100%" stop-color="#E6B226" stop-opacity="0"/></radialGradient><radialGradient id="glid"><stop offset="0%" stop-color="#D9A633" stop-opacity="1"/><stop offset="35%" stop-color="#D9A633" stop-opacity="0.85"/><stop offset="60%" stop-color="#D9A633" stop-opacity="0.25"/><stop offset="100%" stop-color="#D9A633" stop-opacity="0"/></radialGradient><radialGradient id="g1"><stop offset="0%" stop-color="#8C4CA6" stop-opacity="1"/><stop offset="35%" stop-color="#8C4CA6" stop-opacity="0.85"/><stop offset="60%" stop-color="#8C4CA6" stop-opacity="0.25"/><stop offset="100%" stop-color="#8C4CA6" stop-opacity="0"/></radialGradient><radialGradient id="g2"><stop offset="0%" stop-color="#66388C" stop-opacity="1"/><stop offset="35%" stop-color="#66388C" stop-opacity="0.85"/><stop offset="60%" stop-color="#66388C" stop-opacity="0.25"/><stop offset="100%" stop-color="#66388C" stop-opacity="0"/></radialGradient><radialGradient id="g3"><stop offset="0%" stop-color="#472E6B" stop-opacity="1"/><stop offset="35%" stop-color="#472E6B" stop-opacity="0.85"/><stop offset="60%" stop-color="#472E6B" stop-opacity="0.25"/><stop offset="100%" stop-color="#472E6B" stop-opacity="0"/></radialGradient>
+<radialGradient id="aura-violet">
+<stop offset="0%" stop-color="#2A1A45" stop-opacity="0.55"/>
+<stop offset="55%" stop-color="#1C1230" stop-opacity="0.30"/>
+<stop offset="100%" stop-color="#1C1230" stop-opacity="0"/>
+</radialGradient>
+<radialGradient id="aura-gold">
+<stop offset="0%" stop-color="#8A6420" stop-opacity="0.30"/>
+<stop offset="50%" stop-color="#6A4C1C" stop-opacity="0.12"/>
+<stop offset="100%" stop-color="#6A4C1C" stop-opacity="0"/>
+</radialGradient>
+</defs>
+<rect width="1280" height="640" fill="url(#bg)"/>
+<circle cx="640" cy="285" r="330" fill="url(#aura-violet)"/>
+<circle cx="640" cy="285" r="150" fill="url(#aura-gold)"/>
+<circle cx="708.9" cy="334.7" r="8.3" fill="url(#g1)" opacity="0.40"/>
+<circle cx="653.6" cy="368.9" r="8.3" fill="url(#g1)" opacity="0.48"/>
+<circle cx="590.3" cy="353.9" r="8.3" fill="url(#g1)" opacity="0.68"/>
+<circle cx="556.1" cy="298.6" r="8.3" fill="url(#g1)" opacity="0.88"/>
+<circle cx="571.1" cy="235.3" r="8.3" fill="url(#g1)" opacity="0.95"/>
+<circle cx="626.4" cy="201.1" r="8.3" fill="url(#g1)" opacity="0.86"/>
+<circle cx="689.7" cy="216.1" r="8.3" fill="url(#g1)" opacity="0.65"/>
+<circle cx="723.9" cy="271.4" r="8.3" fill="url(#g1)" opacity="0.46"/>
+<circle cx="639.7" cy="425.0" r="8.3" fill="url(#g2)" opacity="0.72"/>
+<circle cx="574.6" cy="408.8" r="8.3" fill="url(#g2)" opacity="0.61"/>
+<circle cx="524.6" cy="364.3" r="8.3" fill="url(#g2)" opacity="0.49"/>
+<circle cx="501.0" cy="301.5" r="8.3" fill="url(#g2)" opacity="0.40"/>
+<circle cx="509.2" cy="235.0" r="8.3" fill="url(#g2)" opacity="0.34"/>
+<circle cx="547.4" cy="180.0" r="8.3" fill="url(#g2)" opacity="0.35"/>
+<circle cx="606.8" cy="149.0" r="8.3" fill="url(#g2)" opacity="0.41"/>
+<circle cx="673.8" cy="149.1" r="8.3" fill="url(#g2)" opacity="0.51"/>
+<circle cx="733.1" cy="180.4" r="8.3" fill="url(#g2)" opacity="0.63"/>
+<circle cx="771.0" cy="235.7" r="8.3" fill="url(#g2)" opacity="0.74"/>
+<circle cx="778.9" cy="302.2" r="8.3" fill="url(#g2)" opacity="0.81"/>
+<circle cx="755.0" cy="364.8" r="8.3" fill="url(#g2)" opacity="0.82"/>
+<circle cx="704.8" cy="409.1" r="8.3" fill="url(#g2)" opacity="0.77"/>
+<circle cx="478.3" cy="402.8" r="8.3" fill="url(#g3)" opacity="0.49"/>
+<circle cx="450.8" cy="349.9" r="8.3" fill="url(#g3)" opacity="0.55"/>
+<circle cx="440.1" cy="291.2" r="8.3" fill="url(#g3)" opacity="0.61"/>
+<circle cx="447.1" cy="232.0" r="8.3" fill="url(#g3)" opacity="0.65"/>
+<circle cx="471.3" cy="177.5" r="8.3" fill="url(#g3)" opacity="0.69"/>
+<circle cx="510.5" cy="132.6" r="8.3" fill="url(#g3)" opacity="0.70"/>
+<circle cx="561.2" cy="101.2" r="8.3" fill="url(#g3)" opacity="0.69"/>
+<circle cx="618.8" cy="86.1" r="8.3" fill="url(#g3)" opacity="0.67"/>
+<circle cx="678.4" cy="88.7" r="8.3" fill="url(#g3)" opacity="0.63"/>
+<circle cx="734.5" cy="108.8" r="8.3" fill="url(#g3)" opacity="0.58"/>
+<circle cx="782.3" cy="144.5" r="8.3" fill="url(#g3)" opacity="0.52"/>
+<circle cx="817.4" cy="192.6" r="8.3" fill="url(#g3)" opacity="0.46"/>
+<circle cx="836.7" cy="249.0" r="8.3" fill="url(#g3)" opacity="0.40"/>
+<circle cx="838.6" cy="308.6" r="8.3" fill="url(#g3)" opacity="0.35"/>
+<circle cx="822.8" cy="366.1" r="8.3" fill="url(#g3)" opacity="0.31"/>
+<circle cx="790.8" cy="416.4" r="8.3" fill="url(#g3)" opacity="0.28"/>
+<circle cx="745.4" cy="455.0" r="8.3" fill="url(#g3)" opacity="0.28"/>
+<circle cx="690.6" cy="478.5" r="8.3" fill="url(#g3)" opacity="0.30"/>
+<circle cx="631.3" cy="484.8" r="8.3" fill="url(#g3)" opacity="0.33"/>
+<circle cx="572.8" cy="473.4" r="8.3" fill="url(#g3)" opacity="0.37"/>
+<circle cx="520.2" cy="445.2" r="8.3" fill="url(#g3)" opacity="0.43"/>
+<circle cx="640.0" cy="285.0" r="12.5" fill="url(#gpupil)" opacity="1.00"/>
+<circle cx="620.0" cy="285.1" r="8.3" fill="url(#giris)" opacity="1.00"/>
+<circle cx="625.8" cy="270.9" r="8.3" fill="url(#giris)" opacity="0.90"/>
+<circle cx="639.9" cy="265.0" r="8.3" fill="url(#giris)" opacity="0.65"/>
+<circle cx="654.1" cy="270.8" r="8.3" fill="url(#giris)" opacity="0.40"/>
+<circle cx="660.0" cy="284.9" r="8.3" fill="url(#giris)" opacity="0.30"/>
+<circle cx="654.2" cy="299.1" r="8.3" fill="url(#giris)" opacity="0.40"/>
+<circle cx="640.1" cy="305.0" r="8.3" fill="url(#giris)" opacity="0.65"/>
+<circle cx="625.9" cy="299.2" r="8.3" fill="url(#giris)" opacity="0.90"/>
+<circle cx="750.0" cy="285.0" r="8.3" fill="url(#glid)" opacity="0.30"/>
+<circle cx="750.0" cy="285.0" r="8.3" fill="url(#glid)" opacity="0.30"/>
+<circle cx="744.6" cy="275.1" r="8.3" fill="url(#glid)" opacity="0.52"/>
+<circle cx="744.6" cy="291.8" r="8.3" fill="url(#glid)" opacity="0.52"/>
+<circle cx="729.0" cy="266.2" r="8.3" fill="url(#glid)" opacity="0.71"/>
+<circle cx="729.0" cy="297.9" r="8.3" fill="url(#glid)" opacity="0.71"/>
+<circle cx="704.7" cy="259.1" r="8.3" fill="url(#glid)" opacity="0.87"/>
+<circle cx="704.7" cy="302.8" r="8.3" fill="url(#glid)" opacity="0.87"/>
+<circle cx="674.0" cy="254.6" r="8.3" fill="url(#glid)" opacity="0.97"/>
+<circle cx="674.0" cy="305.9" r="8.3" fill="url(#glid)" opacity="0.97"/>
+<circle cx="640.0" cy="253.0" r="8.3" fill="url(#glid)" opacity="1.00"/>
+<circle cx="640.0" cy="307.0" r="8.3" fill="url(#glid)" opacity="1.00"/>
+<circle cx="606.0" cy="254.6" r="8.3" fill="url(#glid)" opacity="0.97"/>
+<circle cx="606.0" cy="305.9" r="8.3" fill="url(#glid)" opacity="0.97"/>
+<circle cx="575.3" cy="259.1" r="8.3" fill="url(#glid)" opacity="0.87"/>
+<circle cx="575.3" cy="302.8" r="8.3" fill="url(#glid)" opacity="0.87"/>
+<circle cx="551.0" cy="266.2" r="8.3" fill="url(#glid)" opacity="0.71"/>
+<circle cx="551.0" cy="297.9" r="8.3" fill="url(#glid)" opacity="0.71"/>
+<circle cx="535.4" cy="275.1" r="8.3" fill="url(#glid)" opacity="0.52"/>
+<circle cx="535.4" cy="291.8" r="8.3" fill="url(#glid)" opacity="0.52"/>
+<circle cx="530.0" cy="285.0" r="8.3" fill="url(#glid)" opacity="0.30"/>
+<circle cx="530.0" cy="285.0" r="8.3" fill="url(#glid)" opacity="0.30"/>
+<text x="640" y="525" text-anchor="middle" fill="#A68C66" opacity="0.85" font-family="'DejaVu Sans', 'Helvetica Neue', Arial, sans-serif" font-size="26" letter-spacing="14">L A T E R A L U S</text>
+</svg>
