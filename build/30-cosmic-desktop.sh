@@ -79,15 +79,18 @@ GHOSTTY_BUILD_DEPS=(
 # it separately so it's not in the removal list
 dnf5 install -y "${GHOSTTY_BUILD_DEPS[@]}" gettext
 
+# Build under /var/tmp: /tmp is a tmpfs during image builds, so sources and
+# the zig cache would live in RAM — combined with the compile itself that
+# trips systemd-oomd on 16 GB hosts/runners.
 # Fetch Zig compiler (static binary, no install needed)
 curl -fsSL "https://ziglang.org/download/${ZIG_VERSION}/zig-x86_64-linux-${ZIG_VERSION}.tar.xz" \
-    | tar -xJ -C /tmp
-ZIG="/tmp/zig-x86_64-linux-${ZIG_VERSION}/zig"
+    | tar -xJ -C /var/tmp
+ZIG="/var/tmp/zig-x86_64-linux-${ZIG_VERSION}/zig"
 
 # Fetch and build Ghostty
 curl -fsSL "https://release.files.ghostty.org/${GHOSTTY_VERSION}/ghostty-${GHOSTTY_VERSION}.tar.gz" \
-    | tar -xz -C /tmp
-cd "/tmp/ghostty-${GHOSTTY_VERSION}"
+    | tar -xz -C /var/tmp
+cd "/var/tmp/ghostty-${GHOSTTY_VERSION}"
 # -Dcpu=baseline is REQUIRED for an image shipped to other machines: Zig targets the
 # *build* host's native CPU by default, so the binary inherits whatever ISA extensions
 # the GitHub runner happened to have. Runner hardware varies (Intel Ice Lake Xeons carry
@@ -97,7 +100,8 @@ cd "/tmp/ghostty-${GHOSTTY_VERSION}"
 # routine). Ghostty's SIMD hot paths dispatch at runtime via Google Highway, so baseline
 # costs no meaningful performance.
 # Upstream guidance: https://github.com/ghostty-org/ghostty/blob/main/PACKAGING.md
-XDG_CACHE_HOME=/tmp/.cache "${ZIG}" build \
+XDG_CACHE_HOME=/var/tmp/.zig-cache "${ZIG}" build \
+    -j4 \
     -Doptimize=ReleaseFast \
     -Dcpu=baseline \
     -Dversion-string="${GHOSTTY_VERSION}" \
@@ -105,7 +109,7 @@ XDG_CACHE_HOME=/tmp/.cache "${ZIG}" build \
 cd /
 
 # Clean up build artifacts and Zig compiler
-rm -rf /tmp/zig-* /tmp/ghostty-*
+rm -rf /var/tmp/zig-* /var/tmp/ghostty-* /var/tmp/.zig-cache
 
 # Remove -devel packages and their transitive -devel deps (headers/pkgconfig only).
 # Runtime libs (gtk4, libadwaita, etc.) are kept because COSMIC — installed above —
