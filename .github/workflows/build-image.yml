@@ -28,6 +28,11 @@ on:
     paths-ignore:
       - "**.md"
       - ".github/workflows/*validate*.yml"
+  schedule:
+    # Weekly rebuild (Mon 05:00 UTC): picks up Fedora and COPR package updates
+    # even when no commit lands — the agaspar/omedora-4 COPR is unpinned, so
+    # payload updates otherwise reach the image only on unrelated commits.
+    - cron: "0 5 * * 1"
   workflow_dispatch:
 
 permissions:
@@ -54,6 +59,36 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Stage-1 gate: full depsolve + download + transaction test of the Omarchy
+  # runtime set inside the real base image (~3 min). Catches COPR repo
+  # breakage and broken RPMs long before the 30-min image build does — and
+  # on schedule runs, even without any commit.
+  depsolve-check:
+    name: Fast COPR depsolve check
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Test-install the Omarchy runtime set against the base image
+        shell: bash
+        run: |
+          podman run --rm ghcr.io/ublue-os/base-main:latest bash -c '
+            set -euo pipefail
+            repo="agaspar/omedora-4"
+            id="copr-${repo//\//-}"
+            printf "%s\n" \
+              "[${id}]" \
+              "name=${id}" \
+              "baseurl=https://download.copr.fedorainfracloud.org/results/${repo}/fedora-\$releasever-\$basearch/" \
+              "gpgcheck=1" \
+              "gpgkey=https://download.copr.fedorainfracloud.org/results/${repo}/pubkey.gpg" \
+              "enabled=1" > "/etc/yum.repos.d/${id}.repo"
+            dnf5 -y install --setopt=tsflags=test \
+              omedora hyprland xdg-desktop-portal-hyprland hyprland-guiutils \
+              hyprland-preview-share-picker hyprpicker hyprsunset \
+              gpu-screen-recorder starship herdr tensaku ttfx \
+              omacalc omacut omawrite voxtype
+            echo "depsolve OK"'
+
   build:
     name: Build and push image
     runs-on: ubuntu-24.04
