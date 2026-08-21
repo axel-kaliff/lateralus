@@ -76,9 +76,8 @@ When you are ready for production, use this prompt to harden the setup:
 
 ```
 Use the `finpilot-maintain` and `finpilot-ci` skills, then:
-1. Enable keyless image signing by uncommenting the step in `.github/workflows/build-image.yml`
-2. Verify the cosign command works: cosign verify --certificate-identity-regexp="https://github.com/USER/REPO/.github/workflows/" --certificate-oidc-issuer="https://token.actions.githubusercontent.com" ghcr.io/USER/REPO:stable
-3. Follow the maintenance schedule in the `finpilot-maintain` skill
+1. Verify keyless image signing works: cosign verify --certificate-identity-regexp="https://github.com/USER/REPO/.github/workflows/" --certificate-oidc-issuer="https://token.actions.githubusercontent.com" ghcr.io/USER/REPO:stable
+2. Follow the maintenance schedule in the `finpilot-maintain` skill
 ```
 
 ## What's Included
@@ -95,7 +94,6 @@ Use the `finpilot-maintain` and `finpilot-ci` skills, then:
   - Brewfile, Justfile, ShellCheck, Renovate config, and it'll even check to make sure the flatpak you add exists on FlatHub
 - Production Grade Features
   - Container signing with keyless OIDC
-  - See checklist below to enable these as they take some manual configuration
 
 ### Homebrew Integration
 
@@ -148,7 +146,7 @@ Important: Change `finpilot` to your repository name in these 7 files:
 
 Your first build will start automatically!
 
-Note: Image signing is disabled by default. Your images will build successfully without any signing keys. Once you're ready for production, see "Optional: Enable Image Signing" below.
+Note: Images are signed automatically with keyless OIDC signing — no keys or secrets to configure. See "Image Signing" below for details.
 
 ### 4. Enable Renovate (Required)
 
@@ -238,9 +236,9 @@ sudo bootc switch ghcr.io/your-username/your-repo-name:stable
 sudo systemctl reboot
 ```
 
-## Optional: Enable Image Signing
+## Image Signing
 
-Image signing is disabled by default to let you start building immediately. However, signing is strongly recommended for production use.
+Images are signed automatically with **keyless OIDC signing** via Cosign and GitHub Actions. No manual key generation, `cosign.key`, or `cosign.pub` files are required — the signature is created using GitHub's OIDC token via Fulcio during each build.
 
 ### Why Sign Images?
 
@@ -248,19 +246,9 @@ Image signing is disabled by default to let you start building immediately. Howe
 - Prevent tampering and supply chain attacks
 - Required for some enterprise/security-focused deployments
 - Industry best practice for production images
+- **Required for promotion**: the `main → stable` release gate verifies signatures on `:testing` and blocks promotion of unsigned images
 
-### Setup Instructions
-
-This template uses **keyless OIDC signing** via Cosign and GitHub Actions. No manual key generation, `cosign.key`, or `cosign.pub` files are required.
-
-1. Edit `.github/workflows/build-image.yml`
-2. Find the "OPTIONAL: Sign and attest" section
-3. Uncomment the `Sign and publish` step (remove the `#` from the beginning of each line in that section)
-4. Commit and push
-
-Your next build will produce a signed image. The signature is created using GitHub's OIDC token via Fulcio.
-
-Users can verify your images with:
+### Verify a Signed Image
 
 ```bash
 cosign verify \
@@ -269,18 +257,21 @@ cosign verify \
   ghcr.io/your-username/your-repo-name:stable
 ```
 
+### Disabling Signing (Not Recommended)
+
+To disable, comment out the `Sign and publish` step in `.github/workflows/build-image.yml`. Be aware that unsigned images will fail the promotion release gate, so `main → stable` promotions will report `release/blocked` until signing is re-enabled.
+
 ## Love Your Image? Let's Go to Production
 
 Ready to take your custom OS to production? Enable these features for enhanced security, reliability, and performance:
 
 ### Production Checklist
 
-- [ ] **Enable Image Signing** (Recommended)
+- [ ] **Verify Image Signing**
   - Provides cryptographic verification of your images
   - Prevents tampering and ensures authenticity
   - Uses keyless OIDC signing via GitHub Actions — no keys or secrets required
-  - See "Optional: Enable Image Signing" section above for setup instructions
-  - Status: **Disabled by default** to allow immediate testing
+  - Verify it works with the `cosign verify` command in the "Image Signing" section above
 
 - [ ] **Enable Image Rechunking** (Recommended)
   - Optimizes bootc image layers for better update performance
@@ -395,11 +386,11 @@ just run-vm-qcow2       # Test in browser-based VM
 
 This template provides security features for production use:
 
-- Optional image signing with keyless OIDC cosign for cryptographic verification
+- Image signing with keyless OIDC cosign for cryptographic verification
 - Automated security updates via Renovate
 - Build provenance tracking
 
-These security features are disabled by default to allow immediate testing. When you're ready for production, see the "Love Your Image? Let's Go to Production" section above to enable them.
+Signing and Renovate run automatically; see the "Love Your Image? Let's Go to Production" section above for optional production hardening like rechunking.
 
 ## Troubleshooting
 

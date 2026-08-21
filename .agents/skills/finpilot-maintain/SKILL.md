@@ -2,7 +2,7 @@
 name: finpilot-maintain
 description: >-
   Maintenance of an active finpilot fork: Renovate digest PRs, README raptor
-  section updates, signing enablement, local test loops, and maintenance
+  section updates, signing verification, local test loops, and maintenance
   schedules. Use when maintaining a fork after onboarding.
 ---
 
@@ -12,7 +12,7 @@ description: >-
 
 - Reviewing and merging Renovate PRs for OCI digest bumps
 - Updating the README "What Makes this Raptor Different" section after changes
-- Deciding whether to enable image signing for production
+- Verifying image signing works for production
 - Running local test builds before pushing changes
 - Planning a maintenance schedule for your fork
 
@@ -28,7 +28,7 @@ description: >-
 2. **Update README raptor section** whenever packages or configuration change
 3. **Run local test loop** before opening PRs
 4. **Open PRs to `main`** — never push directly
-5. **Enable signing** when ready for production
+5. **Verify signing** works after the first signed build
 
 ## Handle Renovate Digest PRs
 
@@ -75,12 +75,11 @@ _Last updated: [date]_
 Always update the date. Keep descriptions brief and user-focused, written for
 typical Linux users, not developers.
 
-## Enable Signing When Ready for Production
+## Verify Signing
 
-Signing is **disabled by default** to allow first builds to succeed. Enable when
-your fork is stable: uncomment the `Sign and publish` step in
-`.github/workflows/build-image.yml` — full setup and verification:
-`finpilot-templates`.
+Keyless OIDC signing runs via the `Sign and publish` step in
+`.github/workflows/build-image.yml`. Unsigned images fail the promotion release
+gate, so leave it enabled. Full details: `finpilot-templates`.
 
 ## Local Test Loop
 
@@ -160,7 +159,7 @@ digest-only PRs. If Renovate stops creating PRs, run the Renovate section of
 
 - Review and clean up old branches
 - Verify `RENOVATE_TOKEN` still valid
-- Consider enabling signing if not already enabled
+- Verify signing works (`cosign verify` on the latest `:stable` image)
 - Review `build/*.sh` scripts for obsolete packages or patterns
 
 ### Annually
@@ -178,7 +177,7 @@ digest-only PRs. If Renovate stops creating PRs, run the Renovate section of
 | "I'll update the README later when I have more changes."                    | Update incrementally. "Later" often means never, and users rely on README for current state.        |
 | "Local builds are optional since CI builds everything."                     | Local builds catch issues faster and don't burn CI minutes. The `just build` loop is essential.     |
 | "I'll push to main to save time."                                           | PRs are cheap. Direct pushes bypass validation and create untraceable changes.                      |
-| "Signing is too hard — I'll skip it."                                       | Keyless OIDC signing is one uncomment step. The hard part is already done in the workflow template. |
+| "Signing is too hard — I'll skip it."                                       | Keyless OIDC signing is already enabled in the template — no setup, no secrets.                     |
 
 ## Red Flags
 
@@ -186,7 +185,7 @@ digest-only PRs. If Renovate stops creating PRs, run the Renovate section of
 - README raptor section missing or severely outdated
 - No local builds run before PRs are opened
 - Direct pushes to `main` bypassing branch protection
-- Signing still disabled after months of production use
+- Signing step removed or disabled (promotion gate will block releases)
 - `RENOVATE_TOKEN` expired (Renovate workflow fails)
 
 ## Verification
@@ -195,5 +194,5 @@ digest-only PRs. If Renovate stops creating PRs, run the Renovate section of
 - [ ] Is the README raptor section updated for the latest changes?
 - [ ] Was `just build` run locally before the last PR?
 - [ ] Are all pushes to `main` via PR with passing `validate` check?
-- [ ] Is image signing enabled (or on the roadmap for production)?
+- [ ] Is image signing verified working?
 - [ ] Is `RENOVATE_TOKEN` valid and the Renovate workflow running?
