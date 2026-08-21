@@ -32,17 +32,17 @@ description: >-
 
 ## Local Build Failures
 
-| Symptom                                | Cause                                                                        | Solution                                                                                    |
-| -------------------------------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| Build fails: "permission denied"       | Signing misconfigured or signing step uncommented without proper permissions | Verify signing step is commented out OR `id-token: write` permission is granted in workflow |
-| Build fails: "package not found"       | Typo in package name, or package unavailable in configured repos             | Check spelling, verify on RPMfusion, add COPR if needed                                     |
-| Build fails: "base image not found"    | Invalid `FROM` line or digest mismatch                                       | Check Containerfile syntax, verify base image tag and digest                                |
-| Build fails: "shellcheck error"        | Script syntax error in `build/*.sh`                                          | Run `shellcheck build/*.sh` locally, fix errors                                             |
-| `bootc container lint` fails           | Missing cleanup, leftover artifacts, or invalid image structure              | Run `build/clean-stage.sh` manually, check for stray files in `/opt` or `/var`              |
-| Podman/Docker not found                | Container runtime not installed                                              | Install `podman` or `docker`, ensure daemon is running                                      |
-| Base image pull fails                  | Network issue or invalid digest                                              | Verify network, check digest is correct, try `podman pull <base-image>` manually            |
-| Multi-stage build fails at `ctx` stage | Missing `COPY --from=` or invalid OCI image reference                        | Verify OCI image names and digests in `Containerfile` ctx stage                             |
-| `just build` fails immediately         | `just` not installed or `Justfile` syntax error                              | Run `just --list`, check `Justfile` for syntax errors                                       |
+| Symptom                                | Cause                                                            | Solution                                                                         |
+| -------------------------------------- | ---------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| Build fails: "permission denied"       | Signing misconfigured or `id-token: write` permission missing    | Verify `id-token: write` and `attestations: write` are granted in the workflow   |
+| Build fails: "package not found"       | Typo in package name, or package unavailable in configured repos | Check spelling, verify on RPMfusion, add COPR if needed                          |
+| Build fails: "base image not found"    | Invalid `FROM` line or digest mismatch                           | Check Containerfile syntax, verify base image tag and digest                     |
+| Build fails: "shellcheck error"        | Script syntax error in `build/*.sh`                              | Run `shellcheck build/*.sh` locally, fix errors                                  |
+| `bootc container lint` fails           | Missing cleanup, leftover artifacts, or invalid image structure  | Run `build/clean-stage.sh` manually, check for stray files in `/opt` or `/var`   |
+| Podman/Docker not found                | Container runtime not installed                                  | Install `podman` or `docker`, ensure daemon is running                           |
+| Base image pull fails                  | Network issue or invalid digest                                  | Verify network, check digest is correct, try `podman pull <base-image>` manually |
+| Multi-stage build fails at `ctx` stage | Missing `COPY --from=` or invalid OCI image reference            | Verify OCI image names and digests in `Containerfile` ctx stage                  |
+| `just build` fails immediately         | `just` not installed or `Justfile` syntax error                  | Run `just --list`, check `Justfile` for syntax errors                            |
 
 ## NVIDIA-Specific Issues
 
@@ -58,18 +58,19 @@ description: >-
 
 ## CI Failures
 
-| Symptom                                    | Cause                                              | Solution                                                                  |
-| ------------------------------------------ | -------------------------------------------------- | ------------------------------------------------------------------------- |
-| PR validation fails: shellcheck            | Syntax error in modified `.sh` file                | Run `shellcheck build/*.sh` locally, fix errors                           |
-| PR validation fails: hadolint              | Dockerfile lint rule violation                     | Check `.hadolint.yaml` for allowed suppressions, fix or document new ones |
-| PR validation fails: Brewfile              | Invalid Brewfile syntax                            | Check Ruby syntax, ensure packages exist (`brew search`)                  |
-| PR validation fails: Flatpak               | Invalid app ID                                     | Verify app ID exists on https://flathub.org/                              |
-| PR validation fails: justfile              | Invalid just syntax                                | Run `just --list` locally to test, fix syntax                             |
-| CI build fails: workflow permissions       | Missing `id-token: write` or `packages: write`     | Verify `.github/workflows/build-image.yml` has correct permissions        |
-| CI build fails: token health               | `RENOVATE_TOKEN` or `GITHUB_TOKEN` invalid/expired | Check token expiry, verify scopes, regenerate if needed                   |
-| CI build fails: signing misconfig          | Signing step uncommented but OIDC not configured   | Comment out signing step OR verify OIDC trust in repo settings            |
-| CI build fails: composite action not found | Wrong commit SHA or repo name in `uses:`           | Verify `projectbluefin/actions` SHA, check network access                 |
-| CI build succeeds but image not published  | Wrong `IMAGE_NAME` or `IMAGE_VENDOR`               | Check `Containerfile` ARGs, verify `clean.yml` package name matches       |
+| Symptom                                                                 | Cause                                                                                                                                       | Solution                                                                                                                  |
+| ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| PR validation fails: shellcheck                                         | Syntax error in modified `.sh` file                                                                                                         | Run `shellcheck build/*.sh` locally, fix errors                                                                           |
+| PR validation fails: hadolint                                           | Dockerfile lint rule violation                                                                                                              | Check `.hadolint.yaml` for allowed suppressions, fix or document new ones                                                 |
+| PR validation fails: Brewfile                                           | Invalid Brewfile syntax                                                                                                                     | Check Ruby syntax, ensure packages exist (`brew search`)                                                                  |
+| PR validation fails: Flatpak                                            | Invalid app ID                                                                                                                              | Verify app ID exists on https://flathub.org/                                                                              |
+| PR validation fails: justfile                                           | Invalid just syntax                                                                                                                         | Run `just --list` locally to test, fix syntax                                                                             |
+| CI build fails: workflow permissions                                    | Missing `id-token: write` or `packages: write`                                                                                              | Verify `.github/workflows/build-image.yml` has correct permissions                                                        |
+| CI build fails: token health                                            | `RENOVATE_TOKEN` or `GITHUB_TOKEN` invalid/expired                                                                                          | Check token expiry, verify scopes, regenerate if needed                                                                   |
+| CI build fails: signing misconfig                                       | OIDC token unavailable (self-hosted runner or restricted permissions)                                                                       | Verify `id-token: write` is granted and the runner supports OIDC; signing is `continue-on-error`, so builds still publish |
+| CI build fails: composite action not found                              | Wrong commit SHA or repo name in `uses:`                                                                                                    | Verify `projectbluefin/actions` SHA, check network access                                                                 |
+| CI build succeeds but image not published                               | Wrong `IMAGE_NAME` or `IMAGE_VENDOR`                                                                                                        | Check `Containerfile` ARGs, verify `clean.yml` package name matches                                                       |
+| Promotion gate blocked: `release/blocked`, cosign "no signatures found" | Image pushed by an older template snapshot before signing was default, or the `Sign and publish` step failed silently (`continue-on-error`) | Merge a new build on `main` so a signed `:testing` image is published; check the build log's sign step for errors         |
 
 ## Runtime Issues
 
