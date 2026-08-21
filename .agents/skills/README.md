@@ -13,7 +13,7 @@ file whose frontmatter tells compatible agents when to load it.
 | [`finpilot-router`](finpilot-router/SKILL.md) | The task routing table: which skill covers what, and the standard sequence. Load when unsure. |
 | [`finpilot-overview`](finpilot-overview/SKILL.md) | Repository architecture and file layout. Start here for orientation. |
 | [`finpilot-onboarding`](finpilot-onboarding/SKILL.md) | Bootstrap a new fork: rename, enable Actions, first green build, raptor section, branch protection. |
-| [`finpilot-templates`](finpilot-templates/SKILL.md) | The 7 rename locations, image identity ARGs, signing setup, AGENTS.md update rules. |
+| [`finpilot-templates`](finpilot-templates/SKILL.md) | The 7 rename locations, image identity ARGs, signing verification, AGENTS.md update rules. |
 | [`finpilot-packages`](finpilot-packages/SKILL.md) | Decision tree: where to add packages (dnf5, Brew, Flatpak). |
 | [`finpilot-custom`](finpilot-custom/SKILL.md) | Runtime layer: Brewfiles, Flatpaks, ujust, and validation. |
 | [`finpilot-build`](finpilot-build/SKILL.md) | Containerfile, Justfile, build scripts, image pinning, advanced topics. |

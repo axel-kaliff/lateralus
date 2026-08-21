@@ -2,8 +2,8 @@
 name: finpilot-templates
 description: >-
   Template identity rules: the seven rename locations, image identity ARGs,
-  keyless signing setup, and AGENTS.md update rules. Use when renaming a fork,
-  enabling signing, or updating AGENTS.md and setup docs.
+  keyless signing, and AGENTS.md update rules. Use when renaming a fork,
+  verifying or explaining signing, or updating AGENTS.md and setup docs.
 metadata:
   context7-sources:
     - /renovatebot/renovate
@@ -14,7 +14,7 @@ metadata:
 ## When to Use
 
 - Renaming `finpilot` in a fork (the 7 locations)
-- Enabling or explaining keyless signing
+- Verifying or explaining keyless signing
 - Updating AGENTS.md or copilot instructions
 - Updating README.md setup sections or SETUP_CHECKLIST.md
 - Documenting new mandatory setup steps for forks
@@ -29,7 +29,7 @@ metadata:
 
 1. **Rename in the 7 locations** (table below)
 2. **Check the image identity ARGs** match the new name (below)
-3. **Enable keyless signing** when the fork is production-ready (below)
+3. **Verify keyless signing** works on the fork's first signed build (below)
 4. **Update AGENTS.md** per the rules below
 5. **Verify** against the checklist at the end of this skill
 
@@ -88,16 +88,14 @@ These are consumed by `build/00-image-info.sh` to write:
 - `/usr/share/ublue-os/image-info.json` (read by the ublue ecosystem)
 - `/usr/lib/os-release` branding fields
 
-## Signing Setup (Keyless OIDC)
+## Signing (Keyless OIDC)
 
-This template uses **keyless OIDC signing** via Cosign + Fulcio. No `cosign.key`,
-`cosign.pub`, or `SIGNING_SECRET` are needed.
+Images are signed automatically via **keyless OIDC signing** with Cosign + Fulcio —
+the `Sign and publish` step in `.github/workflows/build-image.yml`. No `cosign.key`,
+`cosign.pub`, or `SIGNING_SECRET` are needed, and no setup is required.
 
-To enable:
-
-1. Edit `.github/workflows/build-image.yml`
-2. Find the `# OPTIONAL: Sign and attest` section
-3. Uncomment the `Sign and publish` step
+Unsigned images fail the promotion release gate (`release/blocked`), so leave the
+step enabled.
 
 Users verify images with:
 
@@ -141,6 +139,6 @@ Static-key signing (`SIGNING_SECRET`) is not supported by this template.
 
 - [ ] All 7 rename locations updated?
 - [ ] `IMAGE_NAME` / `IMAGE_VENDOR` ARGs match the fork?
-- [ ] Signing enabled only via keyless OIDC (no `cosign.key`/`cosign.pub`)?
+- [ ] Signing uses keyless OIDC only (no `cosign.key`/`cosign.pub`)?
 - [ ] `AGENTS.md` uses semantic references (no line numbers)?
 - [ ] `AGENTS.md` `Last Updated` date current?
