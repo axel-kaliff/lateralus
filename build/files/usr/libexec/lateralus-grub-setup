@@ -30,6 +30,21 @@ fi
 
 echo "Installing Lateralus GRUB theme for ${IMAGE_ID}..."
 
+# bootc mounts /boot read-only, so every write below fails with EROFS unless we
+# remount first. Restore the original state on any exit path — leaving /boot
+# writable would defeat the protection bootc set up.
+BOOT_WAS_RO=0
+if findmnt -no OPTIONS /boot | grep -qE '(^|,)ro(,|$)'; then
+    BOOT_WAS_RO=1
+    mount -o remount,rw /boot
+fi
+restore_boot() {
+    if [ "$BOOT_WAS_RO" -eq 1 ]; then
+        mount -o remount,ro /boot || :
+    fi
+}
+trap restore_boot EXIT
+
 mkdir -p "${THEME_DST}"
 cp -a "${THEME_SRC}"/* "${THEME_DST}"/
 
