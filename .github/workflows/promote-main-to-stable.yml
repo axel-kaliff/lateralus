@@ -15,6 +15,13 @@ on:
   push:
     branches:
       - main
+  schedule:
+    # Daily re-run. The reusable's PR-creation path fails at
+    # `--reviewer <owner>/maintainers` on user-owned repos (no such team),
+    # aborting the run before auto-merge enrollment and the release gate.
+    # By the next scheduled run the PR already exists, so the update path is
+    # taken and the PR gets validate=success posted and auto-merge armed.
+    - cron: "30 6 * * *"
   workflow_dispatch:
 
 permissions:
