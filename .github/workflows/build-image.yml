@@ -89,6 +89,23 @@ jobs:
               omacalc omacut omawrite voxtype
             echo "depsolve OK"'
 
+  # Scheduled runs execute on the default branch (main), so the weekly rebuild
+  # alone only refreshes :stable-testing. Re-dispatch this workflow on the
+  # stable branch so the COPR/Fedora package refresh also reaches the
+  # production tags (:stable / :stable-daily) that machines track.
+  dispatch-stable-rebuild:
+    name: Dispatch stable rebuild
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      actions: write
+    steps:
+      - name: Trigger build on the stable branch
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh workflow run build-image.yml --ref stable --repo "${GITHUB_REPOSITORY}"
+
   build:
     name: Build and push image
     runs-on: ubuntu-24.04
