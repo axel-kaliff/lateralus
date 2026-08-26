@@ -1,0 +1,6 @@
+# Lateralus intentionally diverges from upstream finpilot's Containerfile
+# (different base image, different dnf.conf handling), and upstream Renovate
+# digest bumps re-conflict on every sync. Keep our version wholesale; pick up
+# wanted upstream Containerfile changes by manual cherry-pick instead.
+# Requires: git config merge.ours.driver true (set by sync-upstream.yml).
+Containerfile merge=ours
