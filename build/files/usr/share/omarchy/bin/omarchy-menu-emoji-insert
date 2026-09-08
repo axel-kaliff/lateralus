@@ -1,0 +1,30 @@
+#!/bin/bash
+
+# omarchy:summary=Insert an emoji into the focused application
+# omarchy:group=menu
+# omarchy:args=<emoji>
+# omarchy:hidden=true
+
+# Lateralus override of the upstream omarchy script, installed by
+# build/41-emoji-clipboard.sh. Differences from upstream, and why:
+#
+# - Upstream pipes into `wl-copy --sensitive --foreground` and kills the
+#   process ~0.35s later. On this image that fails outright: --sensitive
+#   needs wl-clipboard >= 2.3.0 and Fedora 44 ships 2.2.1, so wl-copy exits 1
+#   and the emoji never reaches the clipboard at all.
+# - Even where --sensitive exists, killing the transient owner wipes the
+#   emoji from the clipboard right after the synthetic paste. We want
+#   picker selections to stay on the clipboard, so wl-copy runs plain:
+#   it forks and serves the selection until something else replaces it.
+# - The Shift+Insert injection is kept as a best-effort direct insert.
+
+emoji="${1:-}"
+
+[[ -n $emoji ]] || exit
+
+printf '%s' "$emoji" | wl-copy --type text/plain
+
+# Give the picker overlay time to close and focus to return before the
+# synthetic paste; also covers wl-copy's fork claiming the selection.
+sleep 0.15
+wtype -M shift -k Insert -m shift 2>/dev/null || true

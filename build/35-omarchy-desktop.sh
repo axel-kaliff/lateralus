@@ -265,6 +265,136 @@ done
 
 echo "::endgroup::"
 
+echo "::group:: Default Keyboard Layouts (US + Swedish)"
+
+# omedora-settings ships the skel input.lua fully commented; append an active
+# override so every user seeded from skel gets both layouts. Existing users
+# keep their own copy (lateralus-omarchy-user-setup never clobbers).
+#
+# No grp:* option here on purpose. Every Alt-based group toggle -- including
+# grp:alts_toggle, which this used to set -- rebinds <RALT> to plain Alt_R,
+# which destroys AltGr (ISO_Level3_Shift). US never notices, but on "se" every
+# level-3 symbol lives behind AltGr: @ $ { [ ] } \ | ~ all stop working.
+# The layout toggle is a keybinding instead, see the SUPER + SHIFT + SPACE
+# bind appended to bindings.lua below.
+cat >> /etc/skel/.config/hypr/input.lua << 'EOF'
+
+-- Lateralus default: US + Swedish layouts, toggle with SUPER + SHIFT + SPACE.
+hl.config({
+  input = {
+    kb_layout = "us,se",
+    kb_options = "compose:caps,shift:both_capslock_cancel",
+  },
+})
+EOF
+
+echo "::endgroup::"
+
+echo "::group:: Vim-Style Window Navigation"
+
+# Same skel-append pattern as the layouts above: omedora-settings ships
+# bindings.lua fully commented. SUPER + hjkl focuses, + SHIFT swaps. The three
+# defaults that owned those keys move to the same key with ALT added, except
+# SUPER + ALT + K (already the tmux cheatsheet), so the Omarchy keybindings
+# menu takes SHIFT + ALT. Unbinds must precede the rebinds.
+cat >> /etc/skel/.config/hypr/bindings.lua << 'EOF'
+
+-- Lateralus default: vim-style window navigation.
+hl.unbind("SUPER + J") -- was: Toggle window split
+hl.unbind("SUPER + K") -- was: Keybindings
+hl.unbind("SUPER + L") -- was: Toggle workspace layout
+
+o.bind("SUPER + ALT + J", "Toggle window split", hl.dsp.layout("togglesplit"))
+o.bind("SUPER + SHIFT + ALT + K", "Keybindings", "omarchy-menu-keybindings")
+o.bind("SUPER + ALT + L", "Toggle workspace layout", "omarchy-hyprland-workspace-layout-toggle")
+
+o.bind("SUPER + H", "Focus on left window", hl.dsp.focus({ direction = "l" }))
+o.bind("SUPER + J", "Focus on below window", hl.dsp.focus({ direction = "d" }))
+o.bind("SUPER + K", "Focus on above window", hl.dsp.focus({ direction = "u" }))
+o.bind("SUPER + L", "Focus on right window", hl.dsp.focus({ direction = "r" }))
+
+o.bind("SUPER + SHIFT + H", "Swap window to the left", hl.dsp.window.swap({ direction = "l" }))
+o.bind("SUPER + SHIFT + J", "Swap window down", hl.dsp.window.swap({ direction = "d" }))
+o.bind("SUPER + SHIFT + K", "Swap window up", hl.dsp.window.swap({ direction = "u" }))
+o.bind("SUPER + SHIFT + L", "Swap window to the right", hl.dsp.window.swap({ direction = "r" }))
+
+-- Input language switching, replacing the Alt+Alt toggle that input.lua no
+-- longer sets (it broke AltGr). The top-bar toggle it displaces moves to
+-- SUPER + SHIFT + T.
+hl.unbind("SUPER + SHIFT + SPACE") -- was: Toggle top bar
+o.bind_toggle("SUPER + SHIFT + T", "Toggle top bar", "bar")
+o.bind("SUPER + SHIFT + SPACE", "Next keyboard layout", "hyprctl switchxkblayout all next")
+EOF
+
+echo "::endgroup::"
+
+echo "::group:: Laptop Panel Below External Monitors"
+
+# Same skel-append pattern again. Hyprland resolves eDP-1 first (monitor ID 0),
+# so putting auto-center-down on it leaves nothing to center against and the
+# monitors land side by side. Inverting it works: pin eDP-1 as the anchor and
+# let everything else auto-center above. Both rules reuse the file's own
+# omarchy_monitor_scale local, so omarchy-hyprland-monitor-scaling (which only
+# rewrites that one line) keeps working. Machines with no eDP-1 fall through
+# the second rule; a desktop with several externals stacks them upward.
+cat >> /etc/skel/.config/hypr/monitors.lua << 'EOF'
+
+-- Lateralus default: the laptop panel sits centered below any external monitor.
+hl.monitor({ output = "", mode = "preferred", position = "auto-center-up", scale = omarchy_monitor_scale })
+hl.monitor({ output = "eDP-1", mode = "preferred", position = "0x0", scale = omarchy_monitor_scale })
+EOF
+
+echo "::endgroup::"
+
+echo "::group:: Brew PATH for uwsm Sessions"
+
+# uwsm recomposes the session environment at login (prepare-env.sh sources
+# uwsm/env.d/* fragments) and exports its PATH into the systemd user manager,
+# overriding the base's profile.d plumbing for GUI-launched apps. Without this
+# fragment, omarchy menu -> ghostty -e nvim/lazygit can't find brew binaries.
+# Users can override via ~/.config/uwsm/env.d/. (POSIX sh)
+mkdir -p /usr/share/uwsm/env.d
+cat > /usr/share/uwsm/env.d/50-lateralus-brew << 'UWSMBREWEOF'
+# Append Homebrew to the uwsm session PATH (system binaries keep priority).
+if [ -d /home/linuxbrew/.linuxbrew ]; then
+  HOMEBREW_PREFIX="${HOMEBREW_PREFIX:-/home/linuxbrew/.linuxbrew}"
+  export HOMEBREW_PREFIX
+  case ":${PATH}:" in
+  *":${HOMEBREW_PREFIX}/bin:"*) ;;
+  *) export PATH="${PATH}:${HOMEBREW_PREFIX}/bin:${HOMEBREW_PREFIX}/sbin" ;;
+  esac
+fi
+UWSMBREWEOF
+
+echo "::endgroup::"
+
+echo "::group:: SSH Agent for uwsm Sessions"
+
+# The base image's only SSH agent is GNOME's XDG autostart entry
+# (/etc/xdg/autostart/gnome-keyring-ssh.desktop), which is
+# OnlyShowIn=GNOME;Unity;MATE — so a Hyprland session gets no agent at all and
+# SSH_AUTH_SOCK stays unset: passphrases re-prompt on every connection,
+# AddKeysToAgent is a silent no-op, and hosts whose key is only ever offered by
+# the agent fall through to password auth.
+#
+# gcr-ssh-agent.socket (from gcr, pulled in by gnome-keyring above) is
+# the systemd-native replacement: its ExecStartPost exports SSH_AUTH_SOCK into
+# the user manager environment, which uwsm sessions inherit because
+# sockets.target is reached long before graphical-session.target. No desktop
+# condition here — a sockets.target unit starts before uwsm imports
+# XDG_CURRENT_DESKTOP, so ConditionEnvironment (used for the omarchy-* units
+# above) would never match. Harmless under GNOME: gnome-keyring's autostart
+# sets SSH_AUTH_SOCK later in session startup and keeps winning there.
+systemctl --global enable gcr-ssh-agent.socket
+
+# Belt-and-braces against preset re-application on ostree deploys: the base's
+# 99-default-disable.preset is "disable *", which would drop the symlink above.
+cat > /usr/lib/systemd/user-preset/45-lateralus-ssh-agent.preset << 'EOF'
+enable gcr-ssh-agent.socket
+EOF
+
+echo "::endgroup::"
+
 echo "::group:: Install Lateralus Omarchy Integration"
 
 # First-boot per-user config seeding + conditional SDDM autologin
@@ -326,6 +456,27 @@ test -f /usr/share/applications/com.mitchellh.ghostty.desktop # terminal-list ID
 [[ "$(readlink /etc/systemd/system/display-manager.service)" == *sddm.service ]]
 [[ "$(grep -v '^#' /usr/share/xdg-terminal-exec/hyprland-xdg-terminals.list | head -n1)" == "com.mitchellh.ghostty.desktop" ]]
 grep -rqs 'sddm' /usr/lib/sysusers.d/
+# Hyprland sessions have no SSH agent without this (COSMIC/GNOME keyring
+# autostarts are OnlyShowIn=<their own desktop>) — assert binary + enablement.
+test -x /usr/libexec/gcr-ssh-agent
+test -L /etc/systemd/user/sockets.target.wants/gcr-ssh-agent.socket
+# The skel appends above land in files the omedora-settings RPM ships; a payload
+# layout change would otherwise create a stray file and fail silently at login.
+grep -q 'kb_layout = "us,se"' /etc/skel/.config/hypr/input.lua
+# Active (non-comment) grp:* line only -- the skel ships a commented example
+# that mentions grp:alts_toggle. Any Alt group toggle rebinds <RALT> and kills AltGr.
+# Asserted through an if: a plain `! grep` is exempt from errexit, so it would
+# report the problem by doing nothing at all.
+if grep -qE '^[[:space:]]*[^-[:space:]].*grp:' /etc/skel/.config/hypr/input.lua; then
+    echo "ERROR: active grp:* option in skel input.lua — it rebinds RALT and kills AltGr" >&2
+    exit 1
+fi
+grep -q 'switchxkblayout all next' /etc/skel/.config/hypr/bindings.lua
+grep -q 'o.bind("SUPER + H", "Focus on left window"' /etc/skel/.config/hypr/bindings.lua
+grep -q 'position = "auto-center-up"' /etc/skel/.config/hypr/monitors.lua
+# monitors.lua's fragment reuses the file's own omarchy_monitor_scale local
+grep -q 'local omarchy_monitor_scale' /etc/skel/.config/hypr/monitors.lua
+test -f /usr/share/uwsm/env.d/50-lateralus-brew
 # No grep -q here: -q exits at first match and fc-list's remaining writes
 # then die with SIGPIPE (exit 141), which pipefail turns into a build failure.
 fc-list | grep -i 'JetBrainsMono Nerd Font' > /dev/null
