@@ -24,6 +24,9 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          # .gitattributes marks Containerfile merge=ours: our copy always wins
+          # (we intentionally diverge from upstream's base image and dnf setup).
+          git config merge.ours.driver true
           git remote add upstream https://github.com/projectbluefin/finpilot.git
           git fetch upstream main
 

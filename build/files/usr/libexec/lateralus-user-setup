@@ -71,11 +71,26 @@ setup_user() {
         local package="$2"    # package name
         local target="$3"     # stow target directory
         local pkg_dir="${stow_dir}/${package}"
+        local pkg_real
+        pkg_real=$(readlink -f "$pkg_dir" 2>/dev/null || echo "$pkg_dir")
 
         if [ -d "$pkg_dir" ]; then
-            find "$pkg_dir" -type f -o -type l | while read -r src_file; do
+            find "$pkg_dir" \( -type f -o -type l \) | while read -r src_file; do
                 local rel="${src_file#${pkg_dir}/}"
                 local dest="${target}/${rel}"
+                # A previous stow run folds a whole package subdirectory into a
+                # single symlink (~/.config/fish -> ../dotfiles/fish), so $dest
+                # resolves back through it onto $src_file itself. Removing that
+                # deletes the very file we are about to link — it wiped the
+                # dotfiles repo on the pneuma-10 rebase. Stow already owns these
+                # paths, so there is no conflict to clear: skip them.
+                local dest_real
+                dest_real=$(readlink -f "$dest" 2>/dev/null || true)
+                case "$dest_real" in
+                    "$pkg_real" | "$pkg_real"/*)
+                        continue
+                        ;;
+                esac
                 if [ -e "$dest" ] && [ ! -L "$dest" ]; then
                     # Back up real files (not symlinks from previous stow runs)
                     local backup_path="${backup_dir}/${rel}"
