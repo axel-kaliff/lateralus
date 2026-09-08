@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "id": "pneuma.pomodoro",
+  "name": "Pomodoro",
+  "version": "1.0.0",
+  "author": "Axel Kaliff",
+  "license": "MIT",
+  "description": "Focus timer in the bar: live countdown, work/break cycles, popup controls",
+  "kinds": [
+    "service",
+    "bar-widget"
+  ],
+  "entryPoints": {
+    "service": "Service.qml",
+    "barWidget": "BarWidget.qml"
+  },
+  "barWidget": {
+    "displayName": "Pomodoro",
+    "description": "Live countdown in the bar with a popup transport panel",
+    "category": "Time",
+    "allowMultiple": false,
+    "defaultSection": "right"
+  }
+}
