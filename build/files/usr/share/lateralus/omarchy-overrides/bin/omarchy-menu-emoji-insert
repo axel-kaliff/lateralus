@@ -1,0 +1,22 @@
+#!/bin/bash
+# lateralus override — upstream passes `wl-copy --sensitive`, which Fedora 44's
+# wl-clipboard 2.2.1 does not have. wl-copy exited 1 before setting the
+# clipboard, so the Shift+Insert below pasted whatever was already there.
+#
+# Upstream also serves the emoji from a foreground wl-copy it kills right
+# after pasting, leaving the clipboard empty. A plain forking wl-copy keeps
+# the emoji available for re-pasting and drops the PID bookkeeping with it.
+
+# omarchy:summary=Insert an emoji into the focused application
+# omarchy:group=menu
+# omarchy:args=<emoji>
+# omarchy:hidden=true
+
+emoji="${1:-}"
+
+[[ -n $emoji ]] || exit
+
+printf '%s' "$emoji" | wl-copy --type text/plain
+
+sleep 0.15
+wtype -M shift -k Insert -m shift 2>/dev/null || true
