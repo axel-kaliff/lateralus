@@ -12,6 +12,7 @@ Scripts are named with a number prefix (e.g., `10-build.sh`, `20-onepassword.sh`
 - **`20-dotfiles.sh`** - Nerd Fonts and the lateralus dotfiles snapshot (stowed per-user at first boot)
 - **`30-cosmic-desktop.sh`** - COSMIC desktop, cosmic-greeter, and the source-built Ghostty terminal
 - **`35-omarchy-desktop.sh`** - Omarchy v4 desktop (Hyprland + Quickshell) via the omedora RPMs; makes SDDM the default display manager
+- **`37-hyprglass.sh`** - Builds hyprglass against the installed Hyprland RPM and installs `/usr/lib64/hyprland/hyprglass.so`; loaded by the user's Hyprland config
 - **`38-omarchy-qml-patches.sh`** - Rewrites the ECMAScript-3 reserved words (`transient`, `byte`) the omarchy shell declares as identifiers; Qt 6.10+ refuses to parse them, which silently kills the whole notification service
 - **`39-pomodoro.sh`** - Seeds the `pneuma.pomodoro` bar plugin into `/etc/skel` (the stowed dotfiles carry it for existing users)
 - **`40-branding.sh`** - Plymouth boot splash, GRUB theme, and COSMIC wallpaper (runs last so the lateralus splash owns the initramfs)

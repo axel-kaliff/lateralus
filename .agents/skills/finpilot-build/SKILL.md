@@ -57,6 +57,7 @@ release, update both the `FEDORA_MAJOR_VERSION` ARG and the base image tag.
 | `10-build.sh`      | Main script: copies custom files, `dnf5 install`                                      |
 | `20-*.sh`          | Optional extras: third-party repos, COPR packages                                     |
 | `30-*.sh`          | Optional desktop swaps                                                                |
+| `37-hyprglass.sh`  | Builds hyprglass with matching Hyprland headers; protects original packages during build-dependency removal |
 | `clean-stage.sh`   | Always runs last: reverts `keepcache`, disables fedora flatpak repo, clears artefacts |
 
 ### Template build script rules
